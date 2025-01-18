@@ -59,7 +59,9 @@ fn main() {
                 println!("EOF  null"); // Placeholder, remove this line when implementing the scanner
             }
 
-            process::exit(65);
+            if err {
+                process::exit(65);
+            }
         }
         _ => {
             writeln!(io::stderr(), "Unknown command: {}", command).unwrap();
