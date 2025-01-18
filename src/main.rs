@@ -29,10 +29,9 @@ fn main() {
                         println!("LEFT_PAREN ( null")
                     } else if  ")" == c.to_string() {
                         println!("RIGHT_PAREN ) null")
-                    } else if ("\n" == c.to_string() || " " == c.to_string()) {
-                        println!("EOF  null")
                     }
                 }
+                println!("EOF  null")
             } else {
                 println!("EOF  null"); // Placeholder, remove this line when implementing the scanner
             }
