@@ -43,6 +43,8 @@ fn main() {
                         println!("PLUS + null")
                     } else if "-" == c.to_string() {
                         println!("MINUS - null")
+                    } else if ";" == c.to_string() {
+                        println!("SEMICOLON ; null")
                     }
                 }
                 println!("EOF  null")
