@@ -1,4 +1,3 @@
-use std::collections::HashSet;
 use std::{env, process};
 use std::fs;
 use std::io::{self, Write};
@@ -60,9 +59,7 @@ fn main() {
                 println!("EOF  null"); // Placeholder, remove this line when implementing the scanner
             }
 
-            if err {
-                process::exit(65);
-            }
+            process::exit(65);
         }
         _ => {
             writeln!(io::stderr(), "Unknown command: {}", command).unwrap();
