@@ -24,7 +24,15 @@ fn main() {
 
             // Uncomment this block to pass the first stage
             if !file_contents.is_empty() {
-                panic!("Scanner not implemented");
+                for c in file_contents.chars() {
+                    if "(" == c.to_string() {
+                        println!("LEFT_PAREN ( null")
+                    } else if  ")" == c.to_string() {
+                        println!("RIGHT_PAREN ) null")
+                    } else if "\n" == c.to_string() {
+                        println!("EOF  null")
+                    }
+                }
             } else {
                 println!("EOF  null"); // Placeholder, remove this line when implementing the scanner
             }
