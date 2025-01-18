@@ -1,3 +1,4 @@
+use std::collections::HashSet;
 use std::env;
 use std::fs;
 use std::io::{self, Write};
@@ -24,27 +25,32 @@ fn main() {
 
             // Uncomment this block to pass the first stage
             if !file_contents.is_empty() {
-                for c in file_contents.chars() {
-                    if "(" == c.to_string() {
-                        println!("LEFT_PAREN ( null")
-                    } else if  ")" == c.to_string() {
-                        println!("RIGHT_PAREN ) null")
-                    } else if "{" == c.to_string() {
-                        println!("LEFT_BRACE {{ null")
-                    } else if "}" == c.to_string() {
-                        println!("RIGHT_BRACE }} null")
-                    } else if "*" == c.to_string() {
-                        println!("STAR * null")
-                    } else if "." == c.to_string() {
-                        println!("DOT . null")
-                    } else if "," == c.to_string() {
-                        println!("COMMA , null")
-                    } else if "+" == c.to_string() {
-                        println!("PLUS + null")
-                    } else if "-" == c.to_string() {
-                        println!("MINUS - null")
-                    } else if ";" == c.to_string() {
-                        println!("SEMICOLON ; null")
+                let special_chars = &vec!["$".to_string(), "#".to_string()];
+                for (line_number_index, l) in file_contents.lines().enumerate() {
+                    for c in l.chars() {
+                        if "(" == c.to_string() {
+                            println!("LEFT_PAREN ( null")
+                        } else if  ")" == c.to_string() {
+                            println!("RIGHT_PAREN ) null")
+                        } else if "{" == c.to_string() {
+                            println!("LEFT_BRACE {{ null")
+                        } else if "}" == c.to_string() {
+                            println!("RIGHT_BRACE }} null")
+                        } else if "*" == c.to_string() {
+                            println!("STAR * null")
+                        } else if "." == c.to_string() {
+                            println!("DOT . null")
+                        } else if "," == c.to_string() {
+                            println!("COMMA , null")
+                        } else if "+" == c.to_string() {
+                            println!("PLUS + null")
+                        } else if "-" == c.to_string() {
+                            println!("MINUS - null")
+                        } else if ";" == c.to_string() {
+                            println!("SEMICOLON ; null")
+                        } else if special_chars.contains(&c.to_string()) {
+                            writeln!(io::stderr(), "[line {}] Error: Unexpected character: {}", line_number_index + 1,  c.to_string()).unwrap();
+                        }
                     }
                 }
                 println!("EOF  null")
