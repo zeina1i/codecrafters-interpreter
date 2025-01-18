@@ -29,7 +29,7 @@ fn main() {
                         println!("LEFT_PAREN ( null")
                     } else if  ")" == c.to_string() {
                         println!("RIGHT_PAREN ) null")
-                    } else if "\n" == c.to_string() {
+                    } else if ("\n" == c.to_string() || " " == c.to_string()) {
                         println!("EOF  null")
                     }
                 }
