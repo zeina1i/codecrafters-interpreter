@@ -33,6 +33,14 @@ fn main() {
                         println!("LEFT_BRACE {{ null")
                     } else if "}" == c.to_string() {
                         println!("RIGHT_BRACE }} null")
+                    } else if "*" == c.to_string() {
+                        println!("STAR * null")
+                    } else if "." == c.to_string() {
+                        println!("DOT . null")
+                    } else if "," == c.to_string() {
+                        println!("COMMA , null")
+                    } else if "+" == c.to_string() {
+                        println!("PLUS + null")
                     }
                 }
                 println!("EOF  null")
