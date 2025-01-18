@@ -41,6 +41,8 @@ fn main() {
                         println!("COMMA , null")
                     } else if "+" == c.to_string() {
                         println!("PLUS + null")
+                    } else if "-" == c.to_string() {
+                        println!("MINUS - null")
                     }
                 }
                 println!("EOF  null")
