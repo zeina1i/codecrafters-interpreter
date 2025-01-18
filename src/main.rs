@@ -1,5 +1,5 @@
 use std::collections::HashSet;
-use std::env;
+use std::{env, process};
 use std::fs;
 use std::io::{self, Write};
 
@@ -15,6 +15,7 @@ fn main() {
 
     match command.as_str() {
         "tokenize" => {
+            let mut err = false;
             // You can use print statements as follows for debugging, they'll be visible when running tests.
             writeln!(io::stderr(), "Logs from your program will appear here!").unwrap();
 
@@ -49,6 +50,7 @@ fn main() {
                         } else if ";" == c.to_string() {
                             println!("SEMICOLON ; null")
                         } else if special_chars.contains(&c.to_string()) {
+                            err = true;
                             writeln!(io::stderr(), "[line {}] Error: Unexpected character: {}", line_number_index + 1,  c.to_string()).unwrap();
                         }
                     }
@@ -56,6 +58,10 @@ fn main() {
                 println!("EOF  null")
             } else {
                 println!("EOF  null"); // Placeholder, remove this line when implementing the scanner
+            }
+
+            if err {
+                process::exit(65);
             }
         }
         _ => {
