@@ -29,6 +29,10 @@ fn main() {
                         println!("LEFT_PAREN ( null")
                     } else if  ")" == c.to_string() {
                         println!("RIGHT_PAREN ) null")
+                    } else if "{" == c.to_string() {
+                        println!("LEFT_BRACE {{ null")
+                    } else if "}" == c.to_string() {
+                        println!("RIGHT_BRACE }} null")
                     }
                 }
                 println!("EOF  null")
