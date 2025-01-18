@@ -25,7 +25,7 @@ fn main() {
 
             // Uncomment this block to pass the first stage
             if !file_contents.is_empty() {
-                let special_chars = &vec!["$".to_string(), "#".to_string(), "@".to_string(), "^".to_string()];
+                let special_chars = &vec!["$".to_string(), "#".to_string(), "@".to_string(), "^".to_string(), "%".to_string()];
                 for (line_number_index, l) in file_contents.lines().enumerate() {
                     for c in l.chars() {
                         if "(" == c.to_string() {
