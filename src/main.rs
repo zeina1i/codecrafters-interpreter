@@ -15,6 +15,7 @@ fn main() {
     match command.as_str() {
         "tokenize" => {
             let mut err = false;
+            let mut before = "".to_string();
             // You can use print statements as follows for debugging, they'll be visible when running tests.
             writeln!(io::stderr(), "Logs from your program will appear here!").unwrap();
 
@@ -23,7 +24,6 @@ fn main() {
                 String::new()
             });
 
-            let before = "";
             // Uncomment this block to pass the first stage
             if !file_contents.is_empty() {
                 let special_chars = &vec!["$".to_string(), "#".to_string(), "@".to_string(), "^".to_string(), "%".to_string()];
@@ -57,6 +57,7 @@ fn main() {
                             err = true;
                             writeln!(io::stderr(), "[line {}] Error: Unexpected character: {}", line_number_index + 1,  c.to_string()).unwrap();
                         }
+                        before = c.to_string()
                     }
                 }
                 println!("EOF  null")
