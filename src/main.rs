@@ -65,6 +65,9 @@ fn main() {
                         before = c.to_string()
                     }
                 }
+                if before == "=" {
+                    println!("EQUAL = null");
+                }
                 println!("EOF  null")
             } else {
                 println!("EOF  null"); // Placeholder, remove this line when implementing the scanner
