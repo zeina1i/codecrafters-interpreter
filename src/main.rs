@@ -33,6 +33,10 @@ fn main() {
                             println!("EQUAL = null");
                         } else if "=" != c.to_string() && before == "!" {
                             println!("BANG ! null");
+                        } else if "=" != c.to_string() && before == "<" {
+                            println!("LESS < null")
+                        } else if "=" != c.to_string() && before == ">" { 
+                            println!("GREATER > null")
                         }
 
                         if "(" == c.to_string() {
@@ -63,6 +67,14 @@ fn main() {
                             println!("BANG_EQUAL != null");
                             before = "".to_string();
                             continue;
+                        } else if before == "<" && "=" == c.to_string() {
+                            println!("LESS_EQUAL <= null");
+                            before = "".to_string();
+                            continue;
+                        } else if before == ">" && "=" == c.to_string() {
+                            println!("GREATER_EQUAL >= null");
+                            before = "".to_string();
+                            continue;
                         }
                         else if special_chars.contains(&c.to_string()) {
                             err = true;
@@ -74,10 +86,14 @@ fn main() {
                 }
                 if before == "=" {
                     println!("EQUAL = null");
-                }
-                if before == "!" {
+                }else if before == "!" {
                     println!("BANG ! null")
+                }else if before == ">" {
+                    println!("GREATER > null")
+                } else if before == "<" {
+                    println!("LESS < null")
                 }
+
                 println!("EOF  null")
             } else {
                 println!("EOF  null"); // Placeholder, remove this line when implementing the scanner
