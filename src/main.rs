@@ -23,6 +23,7 @@ fn main() {
                 String::new()
             });
 
+            let before = "";
             // Uncomment this block to pass the first stage
             if !file_contents.is_empty() {
                 let special_chars = &vec!["$".to_string(), "#".to_string(), "@".to_string(), "^".to_string(), "%".to_string()];
@@ -48,6 +49,10 @@ fn main() {
                             println!("MINUS - null")
                         } else if ";" == c.to_string() {
                             println!("SEMICOLON ; null")
+                        } else if before == "=" && "=" == c.to_string() {
+                            println!("EQUAL_EQUAL == null")
+                        } else if "=" == c.to_string() && before != "=" {
+                            println!("EQUAL = null")
                         } else if special_chars.contains(&c.to_string()) {
                             err = true;
                             writeln!(io::stderr(), "[line {}] Error: Unexpected character: {}", line_number_index + 1,  c.to_string()).unwrap();
