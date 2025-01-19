@@ -29,6 +29,10 @@ fn main() {
                 let special_chars = &vec!["$".to_string(), "#".to_string(), "@".to_string(), "^".to_string(), "%".to_string()];
                 for (line_number_index, l) in file_contents.lines().enumerate() {
                     for c in l.chars() {
+                        if "=" != c.to_string() && before == "=" {
+                            println!("EQUAL = null");
+                        }
+
                         if "(" == c.to_string() {
                             println!("LEFT_PAREN ( null")
                         } else if  ")" == c.to_string() {
@@ -50,13 +54,14 @@ fn main() {
                         } else if ";" == c.to_string() {
                             println!("SEMICOLON ; null")
                         } else if before == "=" && "=" == c.to_string() {
-                            println!("EQUAL_EQUAL == null")
-                        } else if "=" == c.to_string() && before != "=" {
-                            println!("EQUAL = null")
+                            println!("EQUAL_EQUAL == null");
+                            before = "".to_string();
+                            continue;
                         } else if special_chars.contains(&c.to_string()) {
                             err = true;
                             writeln!(io::stderr(), "[line {}] Error: Unexpected character: {}", line_number_index + 1,  c.to_string()).unwrap();
                         }
+
                         before = c.to_string()
                     }
                 }
