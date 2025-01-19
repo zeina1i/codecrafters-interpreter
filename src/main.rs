@@ -37,6 +37,8 @@ fn main() {
                             println!("LESS < null")
                         } else if "=" != c.to_string() && before == ">" { 
                             println!("GREATER > null")
+                        } else if "/" != c.to_string() && before == "/" {
+                            println!("SLASH / null")
                         }
 
                         if "(" == c.to_string() {
@@ -75,6 +77,9 @@ fn main() {
                             println!("GREATER_EQUAL >= null");
                             before = "".to_string();
                             continue;
+                        } else if "/" == before && "/" == c.to_string() {
+                            before = "".to_string();
+                            break;
                         }
                         else if special_chars.contains(&c.to_string()) {
                             err = true;
@@ -92,6 +97,8 @@ fn main() {
                     println!("GREATER > null")
                 } else if before == "<" {
                     println!("LESS < null")
+                } else if before == "/" {
+                    println!("SLASH / null")
                 }
 
                 println!("EOF  null")
