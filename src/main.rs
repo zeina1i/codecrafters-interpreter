@@ -31,6 +31,8 @@ fn main() {
                     for c in l.chars() {
                         if "=" != c.to_string() && before == "=" {
                             println!("EQUAL = null");
+                        } else if "=" != c.to_string() && before == "!" {
+                            println!("BANG ! null");
                         }
 
                         if "(" == c.to_string() {
@@ -57,7 +59,12 @@ fn main() {
                             println!("EQUAL_EQUAL == null");
                             before = "".to_string();
                             continue;
-                        } else if special_chars.contains(&c.to_string()) {
+                        } else if before == "!" && "=" == c.to_string() {
+                            println!("BANG_EQUAL != null");
+                            before = "".to_string();
+                            continue;
+                        }
+                        else if special_chars.contains(&c.to_string()) {
                             err = true;
                             writeln!(io::stderr(), "[line {}] Error: Unexpected character: {}", line_number_index + 1,  c.to_string()).unwrap();
                         }
@@ -67,6 +74,9 @@ fn main() {
                 }
                 if before == "=" {
                     println!("EQUAL = null");
+                }
+                if before == "!" {
+                    println!("BANG ! null")
                 }
                 println!("EOF  null")
             } else {
