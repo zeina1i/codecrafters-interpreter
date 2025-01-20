@@ -105,6 +105,7 @@ fn main() {
 
                     if let Some(first_char) = before.chars().nth(0) {
                         if first_char == '"' {
+                            err = true;
                             println!("[line {}] Error: Unterminated string.", line_number_index+1)
                         }
                     }
