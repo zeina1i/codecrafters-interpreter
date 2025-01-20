@@ -80,6 +80,20 @@ fn main() {
                         } else if "/" == before && "/" == c.to_string() {
                             before = "".to_string();
                             break;
+                        } else if before.len() > 0 {
+                            if let Some(first_char) = before.chars().nth(0) {
+                                if first_char == '"' && c.to_string() == '"'.to_string() {
+                                    println!("STRING \"{}\" {}", &before[1..], &before[1..]);
+                                    before = "".to_string();
+                                    continue;
+                                } else {
+                                    before = before + c.to_string().as_str();
+                                    continue;
+                                }
+                            }
+                        } else if before.len() == 0 && '"' == c {
+                            before = '"'.to_string();
+                            continue;
                         }
                         else if special_chars.contains(&c.to_string()) {
                             err = true;
@@ -87,6 +101,12 @@ fn main() {
                         }
 
                         before = c.to_string()
+                    }
+
+                    if let Some(first_char) = before.chars().nth(0) {
+                        if first_char == '"' {
+                            println!("[line {}] Error: Unterminated string.", line_number_index+1)
+                        }
                     }
                 }
                 if before == "=" {
