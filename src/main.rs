@@ -99,8 +99,9 @@ fn main() {
                             err = true;
                             writeln!(io::stderr(), "[line {}] Error: Unexpected character: {}", line_number_index + 1,  c.to_string()).unwrap();
                         }
-
-                        before = c.to_string()
+                        if c.to_string() != " " {
+                            before = c.to_string()
+                        }
                     }
 
                     if let Some(first_char) = before.chars().nth(0) {
