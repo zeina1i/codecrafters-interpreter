@@ -107,7 +107,7 @@ fn main() {
                     if let Some(first_char) = before.chars().nth(0) {
                         if first_char == '"' {
                             err = true;
-                            writeln!(io::stderr(), "[line {}] Error: Unterminated string.", line_number_index + 1,  c.to_string()).unwrap();
+                            writeln!(io::stderr(), "[line {}] Error: Unterminated string.", line_number_index + 1).unwrap();
                         }
                     }
                 }
