@@ -95,7 +95,7 @@ fn main() {
                                 }
                             }
                         }
-                        else if special_chars.contains(&c.to_string()) {
+                        if special_chars.contains(&c.to_string()) {
                             err = true;
                             writeln!(io::stderr(), "[line {}] Error: Unexpected character: {}", line_number_index + 1,  c.to_string()).unwrap();
                         }
