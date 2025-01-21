@@ -89,13 +89,13 @@ fn main() {
                                 }else if first_char != '"' && c.to_string() == '"'.to_string() {
                                     before = '"'.to_string();
                                     continue;
-                                }
-                                else {
+                                } else if first_char == '"' && c.to_string() != '"'.to_string() {
                                     before = before + c.to_string().as_str();
                                     continue;
                                 }
                             }
-                        } else if special_chars.contains(&c.to_string()) {
+                        }
+                        else if special_chars.contains(&c.to_string()) {
                             err = true;
                             writeln!(io::stderr(), "[line {}] Error: Unexpected character: {}", line_number_index + 1,  c.to_string()).unwrap();
                         }
