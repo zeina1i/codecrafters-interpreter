@@ -86,11 +86,21 @@ fn main() {
                                     println!("STRING \"{}\" {}", &before[1..], &before[1..]);
                                     before = "".to_string();
                                     continue;
-                                }else if first_char != '"' && c.to_string() == '"'.to_string() {
+                                } else if first_char != '"' && c.to_string() == '"'.to_string() {
                                     before = '"'.to_string();
                                     continue;
                                 } else if first_char == '"' && c.to_string() != '"'.to_string() {
                                     before = before + c.to_string().as_str();
+                                    continue;
+                                }
+
+                                // numeric
+                                if first_char >= '0' && first_char <= '9' && c <= '9' && c >= '0' {
+                                    before = before + c.to_string().as_str();
+                                    continue;
+                                } else if first_char >= '0' && first_char <= '9' && (c >= '9' ||  c <= '0') {
+                                    println!("NUMBER {} {}", before, before);
+                                    before = "".to_string();
                                     continue;
                                 }
                             }
@@ -108,6 +118,10 @@ fn main() {
                         if first_char == '"' {
                             err = true;
                             writeln!(io::stderr(), "[line {}] Error: Unterminated string.", line_number_index + 1).unwrap();
+                        }
+                        if first_char >= '0' && first_char <= '9' {
+                            println!("NUMBER {} {}", before, before);
+                            before = "".to_string()
                         }
                     }
                 }
