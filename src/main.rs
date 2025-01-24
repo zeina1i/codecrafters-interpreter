@@ -51,8 +51,6 @@ fn main() {
                             println!("RIGHT_BRACE }} null")
                         } else if "*" == c.to_string() {
                             println!("STAR * null")
-                        } else if "." == c.to_string() {
-                            println!("DOT . null")
                         } else if "," == c.to_string() {
                             println!("COMMA , null")
                         } else if "+" == c.to_string() {
@@ -80,8 +78,11 @@ fn main() {
                         } else if "/" == before && "/" == c.to_string() {
                             before = "".to_string();
                             break;
-                        } else if before.len() > 0 {
-                            if let Some(first_char) = before.chars().nth(0) {
+                        } else if before.len() > 0 || (c == '.' && before.len() == 0) {
+                            if c == '.' && before.len() == 0 {
+                                before = c.to_string();
+                                continue;
+                            }else if let Some(first_char) = before.chars().nth(0) {
                                 if first_char == '"' && c.to_string() == '"'.to_string() {
                                     println!("STRING \"{}\" {}", &before[1..], &before[1..]);
                                     before = "".to_string();
@@ -94,16 +95,30 @@ fn main() {
                                     continue;
                                 }
 
-                                // numeric
-                                if first_char >= '0' && first_char <= '9' && c <= '9' && c >= '0' {
-                                    before = before + c.to_string().as_str();
-                                    continue;
-                                } else if first_char >= '0' && first_char <= '9' && (c >= '9' ||  c <= '0') {
-                                    println!("NUMBER {} {}", before, before);
-                                    before = "".to_string();
-                                    continue;
+                                let dot_counts = before.matches('.').count();
+                                if dot_counts == 1 {
+                                    if ((first_char >= '0' && first_char <= '9') || first_char == '.') && c <= '9' && c >= '0' {
+                                        before = before + c.to_string().as_str();
+                                        continue;
+                                    } else if ((first_char >= '0' && first_char <= '9') || first_char == '.') && (c >= '9' ||  c <= '0') {
+                                        println!("NUMBER {} {}", before, before);
+                                        before = "".to_string();
+                                        continue;
+                                    }
+                                } else if dot_counts == 0 {
+                                    if (first_char == '.' && c <= '9' && c >= '0') || (first_char >= '0' && first_char <= '9' && c == '.')
+                                    || (first_char >= '0' && first_char <= '9' && c <= '9' && c >= '0'){
+                                        before = before + c.to_string().as_str();
+                                        continue;
+                                    } else if (first_char >= '0' && first_char <= '9') && (c >= '9' ||  c <= '0') {
+                                        println!("NUMBER {} {}", before, before);
+                                        before = "".to_string();
+                                        continue;
+                                    }
                                 }
                             }
+                        } else if "." == c.to_string() {
+                            println!("DOT . null")
                         }
                         if special_chars.contains(&c.to_string()) {
                             err = true;
