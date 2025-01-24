@@ -1,6 +1,11 @@
 use std::{env, process};
 use std::fs;
 use std::io::{self, Write};
+use std::str::FromStr;
+
+fn string_to_decimal_without_crate(s: &str) -> Result<f64, String> {
+    f64::from_str(s).map_err(|e| format!("Invalid decimal string: {}", e))
+}
 
 fn main() {
     let args: Vec<String> = env::args().collect();
@@ -101,7 +106,8 @@ fn main() {
                                         before = before + c.to_string().as_str();
                                         continue;
                                     } else if ((first_char >= '0' && first_char <= '9') || first_char == '.') && (c >= '9' ||  c <= '0') {
-                                        println!("NUMBER {} {}", before, before);
+                                        let d1 = string_to_decimal_without_crate(before.as_str()).expect("Failed to convert s1");
+                                        println!("NUMBER {} {}", before, d1);
                                         before = "".to_string();
                                         continue;
                                     }
@@ -135,11 +141,13 @@ fn main() {
                             writeln!(io::stderr(), "[line {}] Error: Unterminated string.", line_number_index + 1).unwrap();
                         }
                         if first_char >= '0' && first_char <= '9' || first_char == '.' {
-                            let dot_counts = before.matches('.').count();
+                            let d1 = string_to_decimal_without_crate(before.as_str()).expect("Failed to convert s1");
+
+                            let dot_counts = d1.to_string().matches('.').count();
                             if dot_counts == 1 {
-                                println!("NUMBER {} {}", before, before);
+                                println!("NUMBER {} {}", before, d1);
                             }else if dot_counts == 0 {
-                                println!("NUMBER {} {}", before.clone(), before + ".0");
+                                println!("NUMBER {} {}", before.clone(), d1.to_string() + ".0");
                             }
                             before = "".to_string()
                         }
