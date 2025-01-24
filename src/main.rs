@@ -111,7 +111,7 @@ fn main() {
                                         before = before + c.to_string().as_str();
                                         continue;
                                     } else if (first_char >= '0' && first_char <= '9') && (c >= '9' ||  c <= '0') {
-                                        println!("NUMBER {} {}", before, before);
+                                        println!("NUMBER {} {}", before.clone(), before + ".0");
                                         before = "".to_string();
                                         continue;
                                     }
