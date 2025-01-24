@@ -134,8 +134,13 @@ fn main() {
                             err = true;
                             writeln!(io::stderr(), "[line {}] Error: Unterminated string.", line_number_index + 1).unwrap();
                         }
-                        if first_char >= '0' && first_char <= '9' {
-                            println!("NUMBER {} {}", before, before);
+                        if first_char >= '0' && first_char <= '9' || first_char == '.' {
+                            let dot_counts = before.matches('.').count();
+                            if dot_counts == 1 {
+                                println!("NUMBER {} {}", before, before);
+                            }else if dot_counts == 0 {
+                                println!("NUMBER {} {}", before.clone(), before + ".0");
+                            }
                             before = "".to_string()
                         }
                     }
