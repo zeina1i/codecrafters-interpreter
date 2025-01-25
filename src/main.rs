@@ -45,25 +45,59 @@ fn main() {
                         } else if "/" != c.to_string() && before == "/" {
                             println!("SLASH / null")
                         }
+                        if let Some(first_char) = before.chars().nth(0) {
+                            let dot_counts = before.matches('.').count();
+                            if dot_counts == 1 {
+                                if ((first_char >= '0' && first_char <= '9') || first_char == '.') && (c > '9' ||  c < '0') {
+                                    let d1 = string_to_decimal_without_crate(before.as_str()).expect("Failed to convert s1");
+                                    println!("NUMBER {} {}", before, d1);
+                                    before = "".to_string();
+                                }
+                            }
+                            if dot_counts == 0 {
+                                if (first_char >= '0' && first_char <= '9') && (c > '9' ||  c < '0') {
+                                    println!("NUMBER {} {}", before.clone(), before + ".0");
+                                    before = "".to_string();
+                                }
+                            }
+                        }
 
                         if "(" == c.to_string() {
-                            println!("LEFT_PAREN ( null")
+                            println!("LEFT_PAREN ( null");
+                            before = "".to_string();
+                            continue;
                         } else if  ")" == c.to_string() {
-                            println!("RIGHT_PAREN ) null")
+                            println!("RIGHT_PAREN ) null");
+                            before = "".to_string();
+                            continue;
                         } else if "{" == c.to_string() {
-                            println!("LEFT_BRACE {{ null")
+                            println!("LEFT_BRACE {{ null");
+                            before = "".to_string();
+                            continue;
                         } else if "}" == c.to_string() {
-                            println!("RIGHT_BRACE }} null")
+                            println!("RIGHT_BRACE }} null");
+                            before = "".to_string();
+                            continue;
                         } else if "*" == c.to_string() {
-                            println!("STAR * null")
+                            println!("STAR * null");
+                            before = "".to_string();
+                            continue;
                         } else if "," == c.to_string() {
-                            println!("COMMA , null")
+                            println!("COMMA , null");
+                            before = "".to_string();
+                            continue;
                         } else if "+" == c.to_string() {
-                            println!("PLUS + null")
+                            println!("PLUS + null");
+                            before = "".to_string();
+                            continue;
                         } else if "-" == c.to_string() {
-                            println!("MINUS - null")
+                            println!("MINUS - null");
+                            before = "".to_string();
+                            continue;
                         } else if ";" == c.to_string() {
-                            println!("SEMICOLON ; null")
+                            println!("SEMICOLON ; null");
+                            before = "".to_string();
+                            continue;
                         } else if before == "=" && "=" == c.to_string() {
                             println!("EQUAL_EQUAL == null");
                             before = "".to_string();
@@ -105,7 +139,7 @@ fn main() {
                                     if ((first_char >= '0' && first_char <= '9') || first_char == '.') && c <= '9' && c >= '0' {
                                         before = before + c.to_string().as_str();
                                         continue;
-                                    } else if ((first_char >= '0' && first_char <= '9') || first_char == '.') && (c >= '9' ||  c <= '0') {
+                                    } else if ((first_char >= '0' && first_char <= '9') || first_char == '.') && (c > '9' ||  c < '0') {
                                         let d1 = string_to_decimal_without_crate(before.as_str()).expect("Failed to convert s1");
                                         println!("NUMBER {} {}", before, d1);
                                         before = "".to_string();
@@ -116,7 +150,7 @@ fn main() {
                                     || (first_char >= '0' && first_char <= '9' && c <= '9' && c >= '0'){
                                         before = before + c.to_string().as_str();
                                         continue;
-                                    } else if (first_char >= '0' && first_char <= '9') && (c >= '9' ||  c <= '0') {
+                                    } else if (first_char >= '0' && first_char <= '9') && (c > '9' ||  c < '0') {
                                         println!("NUMBER {} {}", before.clone(), before + ".0");
                                         before = "".to_string();
                                         continue;
@@ -124,7 +158,9 @@ fn main() {
                                 }
                             }
                         } else if "." == c.to_string() {
-                            println!("DOT . null")
+                            println!("DOT . null");
+                            before = "".to_string();
+                            continue;
                         }
                         if special_chars.contains(&c.to_string()) {
                             err = true;
