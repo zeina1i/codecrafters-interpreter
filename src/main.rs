@@ -44,8 +44,7 @@ fn main() {
                             println!("GREATER > null")
                         } else if "/" != c.to_string() && before == "/" {
                             println!("SLASH / null")
-                        }
-                        if let Some(first_char) = before.chars().nth(0) {
+                        } else if let Some(first_char) = before.chars().nth(0) {
                             let dot_counts = before.matches('.').count();
                             if dot_counts == 1 {
                                 if ((first_char >= '0' && first_char <= '9') || first_char == '.') && (c > '9' ||  c < '0') {
@@ -55,7 +54,7 @@ fn main() {
                                 }
                             }
                             if dot_counts == 0 {
-                                if (first_char >= '0' && first_char <= '9') && (c > '9' ||  c < '0') {
+                                if (first_char >= '0' && first_char <= '9') && ((c > '9' ||  c < '0') && c != '.') {
                                     println!("NUMBER {} {}", before.clone(), before + ".0");
                                     before = "".to_string();
                                 }
