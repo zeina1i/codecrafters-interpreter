@@ -53,9 +53,16 @@ fn main() {
                             let dot_counts = before.matches('.').count();
                             if dot_counts == 1 {
                                 if ((first_char >= '0' && first_char <= '9') || first_char == '.') && (c > '9' ||  c < '0') {
-                                    let d1 = string_to_decimal_without_crate(before.as_str()).expect("Failed to convert s1");
-                                    println!("NUMBER {} {}", before, d1);
-                                    before = "".to_string();
+                                    let d1: Result<f64, String> = string_to_decimal_without_crate(before.as_str());
+
+                                    match d1 {
+                                        Ok(value) => {
+                                            println!("NUMBER {} {}", before, value);
+                                            before = "".to_string();
+                                        }
+                                        Err(_e) => {
+                                        }
+                                    }
                                 }
                             }
                             if dot_counts == 0 {
@@ -144,10 +151,17 @@ fn main() {
                                         before = before + c.to_string().as_str();
                                         continue;
                                     } else if ((first_char >= '0' && first_char <= '9') || first_char == '.') && (c > '9' ||  c < '0') {
-                                        let d1 = string_to_decimal_without_crate(before.as_str()).expect("Failed to convert s1");
-                                        println!("NUMBER {} {}", before, d1);
-                                        before = "".to_string();
-                                        continue;
+                                        let d1: Result<f64, String> = string_to_decimal_without_crate(before.as_str());
+
+                                        match d1 {
+                                            Ok(value) => {
+                                                println!("NUMBER {} {}", before, value);
+                                                before = "".to_string();
+                                                continue;
+                                            }
+                                            Err(_e) => {
+                                            }
+                                        }
                                     }
                                 } else if dot_counts == 0 {
                                     if (first_char == '.' && c <= '9' && c >= '0') || (first_char >= '0' && first_char <= '9' && c == '.')
