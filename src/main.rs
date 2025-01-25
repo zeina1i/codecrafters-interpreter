@@ -36,14 +36,19 @@ fn main() {
                     for c in l.chars() {
                         if "=" != c.to_string() && before == "=" {
                             println!("EQUAL = null");
+                            before = "".to_string();
                         } else if "=" != c.to_string() && before == "!" {
                             println!("BANG ! null");
+                            before = "".to_string();
                         } else if "=" != c.to_string() && before == "<" {
-                            println!("LESS < null")
+                            println!("LESS < null");
+                            before = "".to_string();
                         } else if "=" != c.to_string() && before == ">" { 
-                            println!("GREATER > null")
+                            println!("GREATER > null");
+                            before = "".to_string();
                         } else if "/" != c.to_string() && before == "/" {
-                            println!("SLASH / null")
+                            println!("SLASH / null");
+                            before = "".to_string();
                         } else if let Some(first_char) = before.chars().nth(0) {
                             let dot_counts = before.matches('.').count();
                             if dot_counts == 1 {
