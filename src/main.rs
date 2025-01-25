@@ -49,7 +49,10 @@ fn main() {
                         } else if "/" != c.to_string() && before == "/" {
                             println!("SLASH / null");
                             before = "".to_string();
-                        } else if let Some(first_char) = before.chars().nth(0) {
+                        } else if "." == before.to_string() && (c < '0' || c > '9') {
+                            println!("DOT . null");
+                            before = "".to_string();
+                        }  else if let Some(first_char) = before.chars().nth(0) {
                             let dot_counts = before.matches('.').count();
                             if dot_counts == 1 {
                                 if ((first_char >= '0' && first_char <= '9') || first_char == '.') && (c > '9' ||  c < '0') {
@@ -72,7 +75,6 @@ fn main() {
                                 }
                             }
                         }
-
                         if "(" == c.to_string() {
                             println!("LEFT_PAREN ( null");
                             before = "".to_string();
@@ -175,10 +177,6 @@ fn main() {
                                     }
                                 }
                             }
-                        } else if "." == c.to_string() {
-                            println!("DOT . null");
-                            before = "".to_string();
-                            continue;
                         }
                         if special_chars.contains(&c.to_string()) {
                             err = true;
