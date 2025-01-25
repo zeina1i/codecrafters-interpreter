@@ -34,6 +34,7 @@ fn main() {
                 let special_chars = &vec!["$".to_string(), "#".to_string(), "@".to_string(), "^".to_string(), "%".to_string()];
                 for (line_number_index, l) in file_contents.lines().enumerate() {
                     for c in l.chars() {
+
                         if "=" != c.to_string() && before == "=" {
                             println!("EQUAL = null");
                             before = "".to_string();
@@ -64,13 +65,24 @@ fn main() {
                                             before = "".to_string();
                                         }
                                         Err(_e) => {
+                                            if " " == c.to_string() {
+                                                println!("IDENTIFIER {} null", before);
+                                                before = "".to_string();
+                                            }
                                         }
                                     }
+                                } else {
+                                    if " " == c.to_string() {
+                                        println!("IDENTIFIER {} null", before);
+                                        before = "".to_string();
+                                    }
                                 }
-                            }
-                            if dot_counts == 0 {
+                            } else if dot_counts == 0 {
                                 if (first_char >= '0' && first_char <= '9') && ((c > '9' ||  c < '0') && c != '.') {
                                     println!("NUMBER {} {}", before.clone(), before + ".0");
+                                    before = "".to_string();
+                                } else if " " == c.to_string() {
+                                    println!("IDENTIFIER {} null", before);
                                     before = "".to_string();
                                 }
                             }
@@ -162,6 +174,7 @@ fn main() {
                                                 continue;
                                             }
                                             Err(_e) => {
+                                                before = before + c.to_string().as_str();
                                             }
                                         }
                                     }
@@ -183,7 +196,7 @@ fn main() {
                             writeln!(io::stderr(), "[line {}] Error: Unexpected character: {}", line_number_index + 1,  c.to_string()).unwrap();
                         }
                         if c.to_string() != " " {
-                            before = c.to_string()
+                            before = before + c.to_string().as_str()
                         }
                     }
 
@@ -215,6 +228,8 @@ fn main() {
                     println!("LESS < null")
                 } else if before == "/" {
                     println!("SLASH / null")
+                } else {
+                    println!("IDENTIFIER {} null", before);
                 }
 
                 println!("EOF  null")
