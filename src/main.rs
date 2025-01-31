@@ -58,7 +58,7 @@ impl<'a> Lexer<'a> {
 
         match self.current {
             Some(c) if c.is_digit(10) => Some(self.read_number()),
-            Some(c) if c.is_alphabetic() => Some(self.read_identifier()),
+            Some(c) if c.is_alphabetic() || c == '_' => Some(self.read_identifier()),
             Some(c) if c == '"' => Some(self.read_string()),
             Some(c) if c == '=' =>  {
                 self.read_char();
