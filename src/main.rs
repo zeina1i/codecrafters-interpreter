@@ -230,6 +230,7 @@ fn main() {
 
             while let Some(token) = lexer.next_token() {
                 let token_string = match token {
+                    Token::Identifier(s) => format!("IDENTIFIER {} null", s),
                     Token::Number(s, n) => {
                         let original = format!("{}", n);
                         let formatted = if n.fract() == 0.0 {
@@ -242,9 +243,8 @@ fn main() {
                                 original.clone()
                             }
                         };
-                        format!("IDENTIFIER {} {} null", s, formatted)
+                        format!("Number {} {} null", s, formatted)
                     },
-                    Token::Identifier(s) => format!("IDENTIFIER {} null", s),
                     Token::Equal => "EQUAL = null".to_string(),
                     Token::EqualEqual => "EQUAL_EQUAL == null".to_string(),
                     Token::Bang => "BANG != null".to_string(),
