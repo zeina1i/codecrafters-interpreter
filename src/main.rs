@@ -219,20 +219,18 @@ impl<'a> Lexer<'a> {
         Token::Identifier(identifier)
     }
 
-    fn read_string(&mut self) -> Token {
+    fn read_string(&mut self) -> Result<Token, String> {
         let mut string = String::new();
-        self.read_char();
+        self.read_char(); // Skip the opening quote
         while let Some(c) = self.current {
             if c == '"' {
-                self.read_char();
-                Token::String(string);
-                break;
+                self.read_char(); // Skip the closing quote
+                return Ok(Token::String(string));
             }
             string.push(c);
             self.read_char();
         }
-
-        Err(format!("Unterminated string: \"{}\"", string));
+        Err(format!("Unterminated string: \"{}\"", string))
     }
 }
 
