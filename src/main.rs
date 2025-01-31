@@ -213,7 +213,7 @@ fn main() {
             while let Some(token) = lexer.next_token() {
                 let token_string = match token {
                     Token::Number(n) => format!("NUMBER {} {}", n, n),
-                    Token::Identifier(s) => format!("IDENTIFIER {} {}", s, s),
+                    Token::Identifier(s) => format!("IDENTIFIER {} null", s),
                     Token::Equal => "EQUAL = null".to_string(),
                     Token::EqualEqual => "EQUAL_EQUAL == null".to_string(),
                     Token::Bang => "BANG != null".to_string(),
