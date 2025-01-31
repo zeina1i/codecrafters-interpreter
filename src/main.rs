@@ -35,7 +35,7 @@ enum Token {
     Plus,
     Minus,
     SemiColumn,
-    String(String),
+    String(bool, String),
     Slash
 }
 
@@ -197,16 +197,18 @@ impl<'a> Lexer<'a> {
 
     fn read_string(&mut self) -> Token {
         let mut string = String::new();
+        let mut terminated = false;
         self.read_char();
         while let Some(c) = self.current {
             if c == '"' {
+                terminated = true;
                 self.read_char();
                 break;
             }
             string.push(c);
             self.read_char();
         }
-        Token::String(string)
+        Token::String(terminated, string)
     }
 }
 
@@ -262,7 +264,13 @@ fn main() {
                     Token::Plus => "PLUS + null".to_string(),
                     Token::Minus => "MINUS - null".to_string(),
                     Token::SemiColumn => "SEMICOLON ; null".to_string(),
-                    Token::String(s) => format!("STRING \"{}\" {}", s, s),
+                    Token::String(terminated, s) => {
+                        if terminated {
+                            format!("STRING \"{}\" {}", s, s)
+                        } else {
+                            format!("STRING \"{}\" {}", s, "unterminated")
+                        }
+                    },
                     Token::Slash => "Slash / null".to_string(),
                 };
 
