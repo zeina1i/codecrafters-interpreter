@@ -1,6 +1,12 @@
+use std::{env, process};
+use std::fs;
+use std::io::{Write};
+use std::str::FromStr;
 use std::str::Chars;
 use std::fs::File;
 use std::io::{self, Read};
+
+
 
 
 struct Lexer<'a> {
@@ -12,7 +18,6 @@ struct Lexer<'a> {
 enum Token {
     Number(f64),
     Identifier(String),
-    Stringz(String),
     Equal,
     EqualEqual,
     Bang,
@@ -30,8 +35,8 @@ enum Token {
     Plus,
     Minus,
     SemiColumn,
-    String,
-    SLASH
+    String(String),
+    Slash
 }
 
 impl<'a> Lexer<'a> {
@@ -93,7 +98,7 @@ impl<'a> Lexer<'a> {
             },
             Some(c) if c == '/' =>  {
                 self.read_char();
-                Some(Token::SLASH)
+                Some(Token::Slash)
             },
             Some(c) if c == '(' =>  {
                 self.read_char();
@@ -183,19 +188,60 @@ impl<'a> Lexer<'a> {
             string.push(c);
             self.read_char();
         }
-        Token::Stringz(string)
+        Token::String(string)
     }
 }
 
 fn main() {
-    let mut file = File::open("text.lox");
+    let args: Vec<String> = env::args().collect();
+    if args.len() < 3 {
+        writeln!(io::stderr(), "Usage: {} tokenize <filename>", args[0]).unwrap();
+        return;
+    }
 
-    let mut contents = String::new();
-    file.unwrap().read_to_string(&mut contents);
+    let command = &args[1];
+    let filename = &args[2];
+    match command.as_str() {
+        "tokenize" => {
+            let mut file = File::open(filename);
 
-    let mut lexer = Lexer::new(&contents);
+            let mut contents = String::new();
+            file.unwrap().read_to_string(&mut contents);
 
-    while let Some(token) = lexer.next_token() {
-        println!("{:?}", token);
+            let mut lexer = Lexer::new(&contents);
+
+            while let Some(token) = lexer.next_token() {
+                let token_string = match token {
+                    Token::Number(n) => format!("NUMBER {} {}", n, n),
+                    Token::Identifier(s) => format!("IDENTIFIER {} {}", s, s),
+                    Token::Equal => "EQUAL = null".to_string(),
+                    Token::EqualEqual => "EQUAL_EQUAL == null".to_string(),
+                    Token::Bang => "BANG != null".to_string(),
+                    Token::BangEqual => "BANG_EQUAL != null".to_string(),
+                    Token::Less => "LESS < null".to_string(),
+                    Token::LessEqual => "LESS_EQUAL <= null".to_string(),
+                    Token::Greater => "GREATER > null".to_string(),
+                    Token::GreaterEqual => "GREATER_EQUAL >= null".to_string(),
+                    Token::LeftParentheses => "LEFT_PAREN ( null".to_string(),
+                    Token::RightParentheses => "RIGHT_PAREN ) null".to_string(),
+                    Token::LeftBrace => "LEFT_BRACE { null".to_string(),
+                    Token::RightBrace => "RIGHT_BRACE } null".to_string(),
+                    Token::Star => "STAR * null".to_string(),
+                    Token::Comma => "COMMA , null".to_string(),
+                    Token::Plus => "PLUS + null".to_string(),
+                    Token::Minus => "MINUS - null".to_string(),
+                    Token::SemiColumn => "SEMICOLON ; null".to_string(),
+                    Token::String(s) => format!("STRING "{}" {}", s, s),
+                    Token::Slash => "Slash / null".to_string(),
+                };
+
+
+                println!("{:?}", token_string);
+            }
+        }
+        _ => {
+            writeln!(io::stderr(), "Unknown command: {}", command).unwrap();
+            return;
+        }
     }
 }
