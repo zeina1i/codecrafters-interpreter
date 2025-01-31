@@ -125,7 +125,7 @@ impl<'a> Lexer<'a> {
             },
             Some(c) if c == '}' =>  {
                 self.read_char();
-                Some(Token::RightParentheses)
+                Some(Token::RightBrace)
             },
             Some(c) if c == '*' =>  {
                 self.read_char();
