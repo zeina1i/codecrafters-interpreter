@@ -1,251 +1,206 @@
-use std::{env, process};
-use std::fs;
-use std::io::{self, Write};
-use std::str::FromStr;
+use std::str::Chars;
+use std::fs::File;
+use std::io::{self, Read};
 
-fn string_to_decimal_without_crate(s: &str) -> Result<f64, String> {
-    f64::from_str(s).map_err(|e| format!("Invalid decimal string: {}", e))
+
+struct Lexer<'a> {
+    input: Chars<'a>,
+    current: Option<char>,
+}
+
+#[derive(Debug)]
+enum Token {
+    Number(f64),
+    Identifier(String),
+    Stringz(String),
+    Equal,
+    EqualEqual,
+    Bang,
+    BangEqual,
+    Less,
+    LessEqual,
+    Greater,
+    GreaterEqual,
+    LeftParentheses,
+    RightParentheses,
+    LeftBrace,
+    RightBrace,
+    Star,
+    Comma,
+    Plus,
+    Minus,
+    SemiColumn,
+    String,
+    SLASH
+}
+
+impl<'a> Lexer<'a> {
+    fn new(input: &'a str) -> Self {
+        let mut lexer = Lexer {
+            input: input.chars(),
+            current: None,
+        };
+        lexer.read_char();
+        lexer
+    }
+
+    fn read_char(&mut self) {
+        self.current = self.input.next();
+    }
+
+    fn next_token(&mut self) -> Option<Token> {
+        self.skip_whitespace();
+
+        match self.current {
+            Some(c) if c.is_digit(10) => Some(self.read_number()),
+            Some(c) if c.is_alphabetic() => Some(self.read_identifier()),
+            Some(c) if c == '"' => Some(self.read_string()),
+            Some(c) if c == '=' =>  {
+                self.read_char();
+                if self.current == Some('=') {
+                    self.read_char();
+                    Some(Token::EqualEqual)
+                } else {
+                    Some(Token::Equal)
+                }
+            },
+            Some(c) if c == '<' =>  {
+                self.read_char();
+                if self.current == Some('=') {
+                    self.read_char();
+                    Some(Token::LessEqual)
+                } else {
+                    Some(Token::Less)
+                }
+            },
+            Some(c) if c == '!' =>  {
+                self.read_char();
+                if self.current == Some('=') {
+                    self.read_char();
+                    Some(Token::BangEqual)
+                } else {
+                    Some(Token::Bang)
+                }
+            },
+            Some(c) if c == '>' =>  {
+                self.read_char();
+                if self.current == Some('=') {
+                    self.read_char();
+                    Some(Token::GreaterEqual)
+                } else {
+                    Some(Token::Greater)
+                }
+            },
+            Some(c) if c == '/' =>  {
+                self.read_char();
+                Some(Token::SLASH)
+            },
+            Some(c) if c == '(' =>  {
+                self.read_char();
+                Some(Token::LeftParentheses)
+            },
+            Some(c) if c == ')' =>  {
+                self.read_char();
+                Some(Token::RightParentheses)
+            },
+            Some(c) if c == '{' =>  {
+                self.read_char();
+                Some(Token::LeftBrace)
+            },
+            Some(c) if c == '}' =>  {
+                self.read_char();
+                Some(Token::RightParentheses)
+            },
+            Some(c) if c == '*' =>  {
+                self.read_char();
+                Some(Token::Star)
+            },
+            Some(c) if c == ',' =>  {
+                self.read_char();
+                Some(Token::Comma)
+            },
+            Some(c) if c == '+' =>  {
+                self.read_char();
+                Some(Token::Plus)
+            },
+            Some(c) if c == '-' =>  {
+                self.read_char();
+                Some(Token::Minus)
+            },
+            Some(c) if c == ';' =>  {
+                self.read_char();
+                Some(Token::SemiColumn)
+            },
+            None => None,
+            _ => {
+                self.read_char();
+                None
+            }
+        }
+    }
+
+    fn skip_whitespace(&mut self) {
+        while let Some(c) = self.current {
+            if !c.is_whitespace() {
+                break;
+            }
+            self.read_char();
+        }
+    }
+
+    fn read_number(&mut self) -> Token {
+        let mut number = String::new();
+        while let Some(c) = self.current {
+            if !c.is_digit(10) && c != '.' {
+                break;
+            }
+            number.push(c);
+            self.read_char();
+        }
+        Token::Number(number.parse().unwrap())
+    }
+
+    fn read_identifier(&mut self) -> Token {
+        let mut identifier = String::new();
+        while let Some(c) = self.current {
+            if !c.is_alphanumeric() && c != '_' {
+                break;
+            }
+            identifier.push(c);
+            self.read_char();
+        }
+        Token::Identifier(identifier)
+    }
+
+    fn read_string(&mut self) -> Token {
+        let mut string = String::new();
+        while let Some(c) = self.current {
+            if c == '"' {
+                string.push(c);
+                self.read_char();
+                break;
+            }
+            string.push(c);
+            self.read_char();
+        }
+        Token::Stringz(string)
+    }
 }
 
 fn main() {
-    let args: Vec<String> = env::args().collect();
-    if args.len() < 3 {
-        writeln!(io::stderr(), "Usage: {} tokenize <filename>", args[0]).unwrap();
-        return;
-    }
+    let mut file = File::open("text.lox");
 
-    let command = &args[1];
-    let filename = &args[2];
+    // Read the file's contents into a string
+    let mut contents = String::new();
+    file.unwrap().read_to_string(&mut contents);
 
-    match command.as_str() {
-        "tokenize" => {
-            let mut err = false;
-            let mut before = "".to_string();
-            // You can use print statements as follows for debugging, they'll be visible when running tests.
-            writeln!(io::stderr(), "Logs from your program will appear here!").unwrap();
+    // Create a lexer with the file's contents
+    let mut lexer = Lexer::new(&contents);
 
-            let file_contents = fs::read_to_string(filename).unwrap_or_else(|_| {
-                writeln!(io::stderr(), "Failed to read file {}", filename).unwrap();
-                String::new()
-            });
+    // let input = "let x == 42;";
+    // let mut lexer = Lexer::new(input);
 
-            // Uncomment this block to pass the first stage
-            if !file_contents.is_empty() {
-                let special_chars = &vec!["$".to_string(), "#".to_string(), "@".to_string(), "^".to_string(), "%".to_string()];
-                for (line_number_index, l) in file_contents.lines().enumerate() {
-                    for c in l.chars() {
-
-                        if "=" != c.to_string() && before == "=" {
-                            println!("EQUAL = null");
-                            before = "".to_string();
-                        } else if "=" != c.to_string() && before == "!" {
-                            println!("BANG ! null");
-                            before = "".to_string();
-                        } else if "=" != c.to_string() && before == "<" {
-                            println!("LESS < null");
-                            before = "".to_string();
-                        } else if "=" != c.to_string() && before == ">" { 
-                            println!("GREATER > null");
-                            before = "".to_string();
-                        } else if "/" != c.to_string() && before == "/" {
-                            println!("SLASH / null");
-                            before = "".to_string();
-                        } else if "." == before.to_string() && (c < '0' || c > '9') {
-                            println!("DOT . null");
-                            before = "".to_string();
-                        }  else if let Some(first_char) = before.chars().nth(0) {
-                            let dot_counts = before.matches('.').count();
-                            if dot_counts == 1 {
-                                if ((first_char >= '0' && first_char <= '9') || first_char == '.') && (c > '9' ||  c < '0') {
-                                    let d1: Result<f64, String> = string_to_decimal_without_crate(before.as_str());
-
-                                    match d1 {
-                                        Ok(value) => {
-                                            println!("NUMBER {} {}", before, value);
-                                            before = "".to_string();
-                                        }
-                                        Err(_e) => {
-                                            if " " == c.to_string() {
-                                                println!("IDENTIFIER {} null", before);
-                                                before = "".to_string();
-                                            }
-                                        }
-                                    }
-                                } else {
-                                    if " " == c.to_string() {
-                                        println!("IDENTIFIER {} null", before);
-                                        before = "".to_string();
-                                    }
-                                }
-                            } else if dot_counts == 0 {
-                                if (first_char >= '0' && first_char <= '9') && ((c > '9' ||  c < '0') && c != '.') {
-                                    println!("NUMBER {} {}", before.clone(), before + ".0");
-                                    before = "".to_string();
-                                } else if " " == c.to_string() {
-                                    println!("IDENTIFIER {} null", before);
-                                    before = "".to_string();
-                                }
-                            }
-                        }
-                        if "(" == c.to_string() {
-                            println!("LEFT_PAREN ( null");
-                            before = "".to_string();
-                            continue;
-                        } else if  ")" == c.to_string() {
-                            println!("RIGHT_PAREN ) null");
-                            before = "".to_string();
-                            continue;
-                        } else if "{" == c.to_string() {
-                            println!("LEFT_BRACE {{ null");
-                            before = "".to_string();
-                            continue;
-                        } else if "}" == c.to_string() {
-                            println!("RIGHT_BRACE }} null");
-                            before = "".to_string();
-                            continue;
-                        } else if "*" == c.to_string() {
-                            println!("STAR * null");
-                            before = "".to_string();
-                            continue;
-                        } else if "," == c.to_string() {
-                            println!("COMMA , null");
-                            before = "".to_string();
-                            continue;
-                        } else if "+" == c.to_string() {
-                            println!("PLUS + null");
-                            before = "".to_string();
-                            continue;
-                        } else if "-" == c.to_string() {
-                            println!("MINUS - null");
-                            before = "".to_string();
-                            continue;
-                        } else if ";" == c.to_string() {
-                            println!("SEMICOLON ; null");
-                            before = "".to_string();
-                            continue;
-                        } else if before == "=" && "=" == c.to_string() {
-                            println!("EQUAL_EQUAL == null");
-                            before = "".to_string();
-                            continue;
-                        } else if before == "!" && "=" == c.to_string() {
-                            println!("BANG_EQUAL != null");
-                            before = "".to_string();
-                            continue;
-                        } else if before == "<" && "=" == c.to_string() {
-                            println!("LESS_EQUAL <= null");
-                            before = "".to_string();
-                            continue;
-                        } else if before == ">" && "=" == c.to_string() {
-                            println!("GREATER_EQUAL >= null");
-                            before = "".to_string();
-                            continue;
-                        } else if "/" == before && "/" == c.to_string() {
-                            before = "".to_string();
-                            break;
-                        } else if before.len() > 0 || (c == '.' && before.len() == 0) {
-                            if c == '.' && before.len() == 0 {
-                                before = c.to_string();
-                                continue;
-                            }else if let Some(first_char) = before.chars().nth(0) {
-                                if first_char == '"' && c.to_string() == '"'.to_string() {
-                                    println!("STRING \"{}\" {}", &before[1..], &before[1..]);
-                                    before = "".to_string();
-                                    continue;
-                                } else if first_char != '"' && c.to_string() == '"'.to_string() {
-                                    before = '"'.to_string();
-                                    continue;
-                                } else if first_char == '"' && c.to_string() != '"'.to_string() {
-                                    before = before + c.to_string().as_str();
-                                    continue;
-                                }
-
-                                let dot_counts = before.matches('.').count();
-                                if dot_counts == 1 {
-                                    if ((first_char >= '0' && first_char <= '9') || first_char == '.') && c <= '9' && c >= '0' {
-                                        before = before + c.to_string().as_str();
-                                        continue;
-                                    } else if ((first_char >= '0' && first_char <= '9') || first_char == '.') && (c > '9' ||  c < '0') {
-                                        let d1: Result<f64, String> = string_to_decimal_without_crate(before.as_str());
-
-                                        match d1 {
-                                            Ok(value) => {
-                                                println!("NUMBER {} {}", before, value);
-                                                before = "".to_string();
-                                                continue;
-                                            }
-                                            Err(_e) => {
-                                                before = before + c.to_string().as_str();
-                                            }
-                                        }
-                                    }
-                                } else if dot_counts == 0 {
-                                    if (first_char == '.' && c <= '9' && c >= '0') || (first_char >= '0' && first_char <= '9' && c == '.')
-                                    || (first_char >= '0' && first_char <= '9' && c <= '9' && c >= '0'){
-                                        before = before + c.to_string().as_str();
-                                        continue;
-                                    } else if (first_char >= '0' && first_char <= '9') && (c > '9' ||  c < '0') {
-                                        println!("NUMBER {} {}", before.clone(), before + ".0");
-                                        before = "".to_string();
-                                        continue;
-                                    }
-                                }
-                            }
-                        }
-                        if special_chars.contains(&c.to_string()) {
-                            err = true;
-                            writeln!(io::stderr(), "[line {}] Error: Unexpected character: {}", line_number_index + 1,  c.to_string()).unwrap();
-                        }
-                        if c.to_string() != " " {
-                            before = before + c.to_string().as_str()
-                        }
-                    }
-
-                    if let Some(first_char) = before.chars().nth(0) {
-                        if first_char == '"' {
-                            err = true;
-                            writeln!(io::stderr(), "[line {}] Error: Unterminated string.", line_number_index + 1).unwrap();
-                        }
-                        if first_char >= '0' && first_char <= '9' || first_char == '.' {
-                            let d1 = string_to_decimal_without_crate(before.as_str()).expect("Failed to convert s1");
-
-                            let dot_counts = d1.to_string().matches('.').count();
-                            if dot_counts == 1 {
-                                println!("NUMBER {} {}", before, d1);
-                            }else if dot_counts == 0 {
-                                println!("NUMBER {} {}", before.clone(), d1.to_string() + ".0");
-                            }
-                            before = "".to_string()
-                        }
-                    }
-                }
-                if before == "=" {
-                    println!("EQUAL = null");
-                }else if before == "!" {
-                    println!("BANG ! null")
-                }else if before == ">" {
-                    println!("GREATER > null")
-                } else if before == "<" {
-                    println!("LESS < null")
-                } else if before == "/" {
-                    println!("SLASH / null")
-                } else {
-                    println!("IDENTIFIER {} null", before);
-                }
-
-                println!("EOF  null")
-            } else {
-                println!("EOF  null"); // Placeholder, remove this line when implementing the scanner
-            }
-
-            if err {
-                process::exit(65);
-            }
-        }
-        _ => {
-            writeln!(io::stderr(), "Unknown command: {}", command).unwrap();
-            return;
-        }
+    while let Some(token) = lexer.next_token() {
+        println!("{:?}", token);
     }
 }
-
-
