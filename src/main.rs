@@ -295,7 +295,7 @@ fn main() {
                     Token::String(s) => {
                         format!("STRING \"{}\" {}", s, s)
                     },
-                    Token::Slash => "Slash / null".to_string(),
+                    Token::Slash => "SLASH / null".to_string(),
                 };
 
 
