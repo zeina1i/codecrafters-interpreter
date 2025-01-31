@@ -37,6 +37,7 @@ enum Token {
     SemiColumn,
     String(String),
     Slash,
+    Dot,
 }
 
 fn is_blacklisted(c: char) -> bool {
@@ -134,6 +135,10 @@ impl<'a> Lexer<'a> {
                 } else {
                     Some(Token::Slash)
                 }
+            },
+            Some(c) if c == '.' =>  {
+                self.read_char();
+                Some(Token::Dot)
             },
             Some(c) if c == '(' =>  {
                 self.read_char();
@@ -286,6 +291,7 @@ fn main() {
                     Token::Plus => "PLUS + null".to_string(),
                     Token::Minus => "MINUS - null".to_string(),
                     Token::SemiColumn => "SEMICOLON ; null".to_string(),
+                    Token::Dot => "DOT . null".to_string(),
                     Token::String(s) => {
                         format!("STRING \"{}\" {}", s, s)
                     },
