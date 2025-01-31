@@ -14,6 +14,8 @@ struct Lexer<'a> {
     current: Option<char>,
     line: usize
 }
+// "$".to_string(), "#".to_string(), "@".to_string(), "@".to_string(), "%".to_string()
+const BLACKLISTED_CHARS: [char; 5] = ['$', '#', '@', '^', '%'];
 
 #[derive(Debug)]
 enum Token {
@@ -37,7 +39,8 @@ enum Token {
     Minus,
     SemiColumn,
     String(bool, String),
-    Slash
+    Slash,
+    BlacklistedChar(char)
 }
 
 impl<'a> Lexer<'a> {
@@ -62,6 +65,11 @@ impl<'a> Lexer<'a> {
         self.skip_whitespace();
 
         match self.current {
+            Some(c) if BLACKLISTED_CHARS.contains(&c) => {
+                let blacklisted = c;
+                self.read_char();
+                Some(Token::BlacklistedChar(blacklisted))
+            },
             Some(c) if c.is_digit(10) => Some(self.read_number()),
             Some(c) if c.is_alphabetic() || c == '_' => Some(self.read_identifier()),
             Some(c) if c == '"' => Some(self.read_string()),
@@ -278,6 +286,10 @@ fn main() {
                             process::exit(65);
                         }
                     },
+                    Token::BlacklistedChar(c) => {
+                        writeln!(io::stderr(), "[line {}] Error: Unexpected character: {}", lexer.line,  c).unwrap();
+                        process::exit(65);
+                    }
                     Token::Slash => "Slash / null".to_string(),
                 };
 
