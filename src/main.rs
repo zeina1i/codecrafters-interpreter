@@ -174,9 +174,9 @@ impl<'a> Lexer<'a> {
 
     fn read_string(&mut self) -> Token {
         let mut string = String::new();
+        self.read_char();
         while let Some(c) = self.current {
             if c == '"' {
-                string.push(c);
                 self.read_char();
                 break;
             }
@@ -190,15 +190,10 @@ impl<'a> Lexer<'a> {
 fn main() {
     let mut file = File::open("text.lox");
 
-    // Read the file's contents into a string
     let mut contents = String::new();
     file.unwrap().read_to_string(&mut contents);
 
-    // Create a lexer with the file's contents
     let mut lexer = Lexer::new(&contents);
-
-    // let input = "let x == 42;";
-    // let mut lexer = Lexer::new(input);
 
     while let Some(token) = lexer.next_token() {
         println!("{:?}", token);
