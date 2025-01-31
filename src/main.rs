@@ -98,7 +98,18 @@ impl<'a> Lexer<'a> {
             },
             Some(c) if c == '/' =>  {
                 self.read_char();
-                Some(Token::Slash)
+                if self.current == Some('/') {
+                    while let Some(c) = self.current {
+                        if c == '\n' {
+                            self.read_char();
+                            break;
+                        }
+                        self.read_char();
+                    }
+                    self.next_token()
+                } else {
+                    Some(Token::Slash)
+                }
             },
             Some(c) if c == '(' =>  {
                 self.read_char();
