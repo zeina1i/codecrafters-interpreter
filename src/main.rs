@@ -243,7 +243,7 @@ fn main() {
                                 original.clone()
                             }
                         };
-                        format!("Number {} {}", s, formatted)
+                        format!("NUMBER {} {}", s, formatted)
                     },
                     Token::Equal => "EQUAL = null".to_string(),
                     Token::EqualEqual => "EQUAL_EQUAL == null".to_string(),
