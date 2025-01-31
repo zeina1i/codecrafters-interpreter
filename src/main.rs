@@ -1,12 +1,8 @@
 use std::{env, process};
-use std::fs;
 use std::io::{Write};
-use std::str::FromStr;
 use std::str::Chars;
 use std::fs::File;
 use std::io::{self, Read};
-use std::process::ExitCode;
-use std::collections::HashSet;
 
 struct Lexer<'a> {
     input: Chars<'a>,
@@ -50,7 +46,6 @@ fn is_reserved_word(word: &str) -> bool {
 }
 
 fn is_blacklisted(c: char) -> bool {
-    // Add your blacklisted characters here
     matches!(c, '$' | '#' | '@' | '^' | '%')
 }
 
