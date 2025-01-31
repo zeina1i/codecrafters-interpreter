@@ -297,7 +297,7 @@ fn main() {
 
                 println!("{}", token_string);
             }
-            println!("EOF  null")
+            println!("EOF  null");
             if lexer.exit_code > 0 {
                 process::exit(lexer.exit_code);
             }
