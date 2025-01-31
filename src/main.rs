@@ -239,18 +239,6 @@ impl<'a> Lexer<'a> {
         }
     }
 
-    fn read_reserved_word(&mut self) -> Token {
-        let mut identifier = String::new();
-        while let Some(c) = self.current {
-            if !c.is_alphanumeric() && c != '_' {
-                break;
-            }
-            identifier.push(c);
-            self.read_char();
-        }
-        Token::Identifier(identifier)
-    }
-
     fn read_string(&mut self) -> Result<Token, String> {
         let mut string = String::new();
         self.read_char(); // Skip the opening quote
