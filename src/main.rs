@@ -274,6 +274,7 @@ fn main() {
                             format!("STRING \"{}\" {}", s, s)
                         } else {
                             writeln!(io::stderr(), "[line {}] Error: Unterminated string.", lexer.line).unwrap();
+                            println!("EOF  null");
                             process::exit(65);
                         }
                     },
