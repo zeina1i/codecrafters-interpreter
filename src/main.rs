@@ -268,7 +268,8 @@ fn main() {
                         if terminated {
                             format!("STRING \"{}\" {}", s, s)
                         } else {
-                            format!("STRING \"{}\" {}", s, "unterminated")
+                            format!("STRING \"{}\" {}", s, "unterminated");
+                            process::exit(65);
                         }
                     },
                     Token::Slash => "Slash / null".to_string(),
