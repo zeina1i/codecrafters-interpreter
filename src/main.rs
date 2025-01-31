@@ -6,6 +6,7 @@ use std::str::Chars;
 use std::fs::File;
 use std::io::{self, Read};
 use std::process::ExitCode;
+use std::collections::HashSet;
 
 struct Lexer<'a> {
     input: Chars<'a>,
@@ -38,12 +39,21 @@ enum Token {
     String(String),
     Slash,
     Dot,
+    ReservedWord(String),
+}
+
+fn is_reserved_word(word: &str) -> bool {
+    matches!(word,
+        "and" | "class" | "else" | "false" | "for" | "fun" | "if" | "nil" | "or" | "print" |
+        "return" | "super" | "this" | "true" | "var" | "while"
+    )
 }
 
 fn is_blacklisted(c: char) -> bool {
     // Add your blacklisted characters here
     matches!(c, '$' | '#' | '@' | '^' | '%')
 }
+
 
 impl<'a> Lexer<'a> {
     fn new(input: &'a str) -> Self {
@@ -221,6 +231,23 @@ impl<'a> Lexer<'a> {
             identifier.push(c);
             self.read_char();
         }
+
+        if is_reserved_word(&identifier) {
+            Token::ReservedWord(identifier)
+        } else {
+            Token::Identifier(identifier)
+        }
+    }
+
+    fn read_reserved_word(&mut self) -> Token {
+        let mut identifier = String::new();
+        while let Some(c) = self.current {
+            if !c.is_alphanumeric() && c != '_' {
+                break;
+            }
+            identifier.push(c);
+            self.read_char();
+        }
         Token::Identifier(identifier)
     }
 
@@ -295,6 +322,7 @@ fn main() {
                     Token::String(s) => {
                         format!("STRING \"{}\" {}", s, s)
                     },
+                    Token::ReservedWord(s) => format!("{} {} null", s.to_uppercase(), s),
                     Token::Slash => "SLASH / null".to_string(),
                 };
 
