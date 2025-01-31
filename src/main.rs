@@ -5,17 +5,14 @@ use std::str::FromStr;
 use std::str::Chars;
 use std::fs::File;
 use std::io::{self, Read};
-
-
-
+use std::process::ExitCode;
 
 struct Lexer<'a> {
     input: Chars<'a>,
     current: Option<char>,
-    line: usize
+    line: usize,
+    exit_code: i32,
 }
-// "$".to_string(), "#".to_string(), "@".to_string(), "@".to_string(), "%".to_string()
-const BLACKLISTED_CHARS: [char; 5] = ['$', '#', '@', '^', '%'];
 
 #[derive(Debug)]
 enum Token {
@@ -38,9 +35,13 @@ enum Token {
     Plus,
     Minus,
     SemiColumn,
-    String(bool, String),
+    String(String),
     Slash,
-    BlacklistedChar(char)
+}
+
+fn is_blacklisted(c: char) -> bool {
+    // Add your blacklisted characters here
+    matches!(c, '$' | '#' | '@' | '^' | '%')
 }
 
 impl<'a> Lexer<'a> {
@@ -49,6 +50,7 @@ impl<'a> Lexer<'a> {
             input: input.chars(),
             current: None,
             line: 1,
+            exit_code: 0,
         };
         lexer.read_char();
         lexer
@@ -65,14 +67,23 @@ impl<'a> Lexer<'a> {
         self.skip_whitespace();
 
         match self.current {
-            Some(c) if BLACKLISTED_CHARS.contains(&c) => {
-                let blacklisted = c;
+
+            Some(c) if is_blacklisted(c) => {
+                writeln!(io::stderr(), "[line {}] Error: Unexpected character: {}", self.line, c).unwrap();
+                self.exit_code = 65;
                 self.read_char();
-                Some(Token::BlacklistedChar(blacklisted))
+                self.next_token()
             },
             Some(c) if c.is_digit(10) => Some(self.read_number()),
             Some(c) if c.is_alphabetic() || c == '_' => Some(self.read_identifier()),
-            Some(c) if c == '"' => Some(self.read_string()),
+            Some(c) if c == '"' => match self.read_string() {
+                Ok(token) => Some(token),
+                Err(err) => {
+                    self.exit_code = 65;
+                    writeln!(io::stderr(), "[line {}] Error: Unterminated string.", self.line).unwrap();
+                    None
+                }
+            },
             Some(c) if c == '=' =>  {
                 self.read_char();
                 if self.current == Some('=') {
@@ -210,18 +221,18 @@ impl<'a> Lexer<'a> {
 
     fn read_string(&mut self) -> Token {
         let mut string = String::new();
-        let mut terminated = false;
         self.read_char();
         while let Some(c) = self.current {
             if c == '"' {
-                terminated = true;
                 self.read_char();
+                Token::String(string);
                 break;
             }
             string.push(c);
             self.read_char();
         }
-        Token::String(terminated, string)
+
+        Err(format!("Unterminated string: \"{}\"", string));
     }
 }
 
@@ -277,20 +288,9 @@ fn main() {
                     Token::Plus => "PLUS + null".to_string(),
                     Token::Minus => "MINUS - null".to_string(),
                     Token::SemiColumn => "SEMICOLON ; null".to_string(),
-                    Token::String(terminated, s) => {
-                        if terminated {
-                            format!("STRING \"{}\" {}", s, s)
-                        } else {
-                            writeln!(io::stderr(), "[line {}] Error: Unterminated string.", lexer.line).unwrap();
-                            println!("EOF  null");
-                            process::exit(65);
-                        }
+                    Token::String(s) => {
+                        format!("STRING \"{}\" {}", s, s)
                     },
-                    Token::BlacklistedChar(c) => {
-                        writeln!(io::stderr(), "[line {}] Error: Unexpected character: {}", lexer.line,  c).unwrap();
-                        println!("EOF  null");
-                        process::exit(65);
-                    }
                     Token::Slash => "Slash / null".to_string(),
                 };
 
@@ -298,6 +298,9 @@ fn main() {
                 println!("{}", token_string);
             }
             println!("EOF  null")
+            if lexer.exit_code > 0 {
+                process::exit(lexer.exit_code);
+            }
         }
         _ => {
             writeln!(io::stderr(), "Unknown command: {}", command).unwrap();
