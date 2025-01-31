@@ -12,6 +12,7 @@ use std::io::{self, Read};
 struct Lexer<'a> {
     input: Chars<'a>,
     current: Option<char>,
+    line: usize
 }
 
 #[derive(Debug)]
@@ -44,6 +45,7 @@ impl<'a> Lexer<'a> {
         let mut lexer = Lexer {
             input: input.chars(),
             current: None,
+            line: 1,
         };
         lexer.read_char();
         lexer
@@ -51,6 +53,9 @@ impl<'a> Lexer<'a> {
 
     fn read_char(&mut self) {
         self.current = self.input.next();
+        if let Some('\n') = self.current {
+            self.line += 1;
+        }
     }
 
     fn next_token(&mut self) -> Option<Token> {
@@ -268,7 +273,7 @@ fn main() {
                         if terminated {
                             format!("STRING \"{}\" {}", s, s)
                         } else {
-                            format!("STRING \"{}\" {}", s, "unterminated");
+                            writeln!(io::stderr(), "[line {}] Error: Unterminated string.", lexer.line).unwrap();
                             process::exit(65);
                         }
                     },
