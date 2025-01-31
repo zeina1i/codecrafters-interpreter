@@ -276,7 +276,7 @@ fn main() {
                     },
                     Token::Equal => "EQUAL = null".to_string(),
                     Token::EqualEqual => "EQUAL_EQUAL == null".to_string(),
-                    Token::Bang => "BANG != null".to_string(),
+                    Token::Bang => "BANG ! null".to_string(),
                     Token::BangEqual => "BANG_EQUAL != null".to_string(),
                     Token::Less => "LESS < null".to_string(),
                     Token::LessEqual => "LESS_EQUAL <= null".to_string(),
