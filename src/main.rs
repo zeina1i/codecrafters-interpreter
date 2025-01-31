@@ -236,7 +236,7 @@ fn main() {
                 };
 
 
-                println!("{:?}", token_string);
+                println!("{}", token_string);
             }
         }
         _ => {
