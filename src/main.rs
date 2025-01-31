@@ -238,6 +238,7 @@ fn main() {
 
                 println!("{}", token_string);
             }
+            println!("EOF  null")
         }
         _ => {
             writeln!(io::stderr(), "Unknown command: {}", command).unwrap();
