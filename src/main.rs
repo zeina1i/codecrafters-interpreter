@@ -288,6 +288,7 @@ fn main() {
                     },
                     Token::BlacklistedChar(c) => {
                         writeln!(io::stderr(), "[line {}] Error: Unexpected character: {}", lexer.line,  c).unwrap();
+                        println!("EOF  null");
                         process::exit(65);
                     }
                     Token::Slash => "Slash / null".to_string(),
