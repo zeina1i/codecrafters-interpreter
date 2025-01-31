@@ -231,7 +231,7 @@ fn main() {
                     Token::Plus => "PLUS + null".to_string(),
                     Token::Minus => "MINUS - null".to_string(),
                     Token::SemiColumn => "SEMICOLON ; null".to_string(),
-                    Token::String(s) => format!("STRING "{}" {}", s, s),
+                    Token::String(s) => format!("STRING \"{}\" {}", s, s),
                     Token::Slash => "Slash / null".to_string(),
                 };
 
