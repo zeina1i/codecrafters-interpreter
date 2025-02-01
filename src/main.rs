@@ -343,7 +343,7 @@ fn main() {
                         format!("{}", formatted)
                     },
                     Token::String(s) => s,
-                    Token::LeftParentheses => "(".to_string(),
+                    Token::LeftParentheses => "(group ".to_string(),
                     Token::RightParentheses => ")".to_string(),
                     _ => "Not Implemented".to_string(),
                 };
