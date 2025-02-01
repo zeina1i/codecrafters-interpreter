@@ -342,6 +342,7 @@ fn main() {
                         };
                         format!("{}", formatted)
                     },
+                    Token::String(s) => s,
                     _ => "Not implemented".to_string(),
                 };
 
