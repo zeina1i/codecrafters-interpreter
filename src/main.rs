@@ -328,7 +328,20 @@ fn main() {
             while let Some(token) = lexer.next_token() {
                 let token_string = match token {
                     Token::ReservedWord(s) => s,
-                    Token::Number(s, n) => s,
+                    Token::Number(_, n) => {
+                        let original = format!("{}", n);
+                        let formatted = if n.fract() == 0.0 {
+                            format!("{:.1}", n)
+                        } else {
+                            let parts: Vec<&str> = original.split('.').collect();
+                            if parts.len() > 1 && parts[1].chars().all(|c| c == '0') {
+                                format!("{:.1}", n)
+                            } else {
+                                original.clone()
+                            }
+                        };
+                        format!("{}", formatted)
+                    },
                     _ => "Not implemented".to_string(),
                 };
 
