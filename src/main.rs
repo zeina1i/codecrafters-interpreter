@@ -317,6 +317,23 @@ fn main() {
                 process::exit(lexer.exit_code);
             }
         }
+        "parse" => {
+            let mut file = File::open(filename);
+
+            let mut contents = String::new();
+            file.unwrap().read_to_string(&mut contents);
+
+            let mut lexer = Lexer::new(&contents);
+
+            while let Some(token) = lexer.next_token() {
+                let token_string = match token {
+                    Token::ReservedWord(s) => s,
+                    _ => "Not implemented".to_string(),
+                };
+
+                println!("{}", token_string);
+            }
+        }
         _ => {
             writeln!(io::stderr(), "Unknown command: {}", command).unwrap();
             return;
