@@ -345,10 +345,10 @@ fn main() {
                     Token::String(s) => s,
                     Token::LeftParentheses => "(".to_string(),
                     Token::RightParentheses => ")".to_string(),
-                    _ => "Not implemented".to_string(),
+                    _ => "Not Implemented".to_string(),
                 };
 
-                println!("{}", token_string);
+                print!("{}", token_string);
             }
         }
         _ => {
