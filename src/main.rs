@@ -328,6 +328,7 @@ fn main() {
             while let Some(token) = lexer.next_token() {
                 let token_string = match token {
                     Token::ReservedWord(s) => s,
+                    Token::Number(s, n) => s,
                     _ => "Not implemented".to_string(),
                 };
 
