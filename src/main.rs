@@ -11,83 +11,6 @@ struct Lexer<'a> {
     exit_code: i32,
 }
 
-pub struct Parser<'a> {
-    source: &'a str,
-    lexer: Lexer<'a>,
-    current: Option<Token>,
-    prev_token_end: usize,
-}
-pub enum ErrorType {
-    ParseError,
-    IoError,
-    // Add other error variants as needed
-}
-#[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
-pub struct Node {
-    /// Start offset in source
-    pub start: usize,
-
-    /// End offset in source
-    pub end: usize,
-}
-
-impl Node {
-    pub fn new(start: usize, end: usize) -> Self {
-        Self { start, end }
-    }
-}
-
-pub struct Program {
-    pub node: Node,
-    pub body: Vec<Statement>,
-}
-
-pub enum Statement {
-    VariableDeclarationStatement(VariableDeclaration),
-}
-
-pub struct VariableDeclaration {
-    pub node: Node,
-    pub declarations: Vec<VariableDeclarator>,
-}
-
-pub struct VariableDeclarator {
-    pub node: Node,
-    pub id: BindingIdentifier,
-    pub init: Option<Expression>,
-}
-
-pub struct BindingIdentifier {
-    pub node: Node,
-    pub name: String,
-}
-
-pub enum Expression {
-}
-
-
-impl<'a> Parser<'a> {
-    pub fn new(source: &'a str) -> Self {
-        Self {
-            source,
-            lexer: Lexer::new(source),
-            current: None,
-            prev_token_end: 0,
-        }
-    }
-
-    pub fn parse(&mut self) -> Result<Program, ErrorType> {
-        Ok(Program {
-            node: Node {
-                start: 0,
-                end: self.source.len(),
-            },
-            body: vec![]
-        })
-    }
-}
-
-
 #[derive(Debug)]
 enum Token {
     Number(String, f64),
@@ -376,6 +299,14 @@ impl<'a> Lexer<'a> {
             process::exit(self.exit_code);
         }
     }
+
+    fn collect_tokens(&mut self) -> Vec<Token> {
+        let mut tokens = Vec::new();
+        while let Some(token) = self.next_token() {
+            tokens.push(token);
+        }
+        tokens
+    }
 }
 
 fn main() {
@@ -395,96 +326,61 @@ fn main() {
             file.unwrap().read_to_string(&mut contents);
 
             let mut lexer = Lexer::new(&contents);
+            let tokens = lexer.collect_tokens();
 
-            // while let Some(token) = lexer.next_token() {
-            //     let token_string = match token {
-            //         Token::Identifier(s) => format!("IDENTIFIER {} null", s),
-            //         Token::Number(s, n) => {
-            //             let original = format!("{}", n);
-            //             let formatted = if n.fract() == 0.0 {
-            //                 format!("{:.1}", n)
-            //             } else {
-            //                 let parts: Vec<&str> = original.split('.').collect();
-            //                 if parts.len() > 1 && parts[1].chars().all(|c| c == '0') {
-            //                     format!("{:.1}", n)
-            //                 } else {
-            //                     original.clone()
-            //                 }
-            //             };
-            //             format!("NUMBER {} {}", s, formatted)
-            //         },
-            //         Token::Equal => "EQUAL = null".to_string(),
-            //         Token::EqualEqual => "EQUAL_EQUAL == null".to_string(),
-            //         Token::Bang => "BANG ! null".to_string(),
-            //         Token::BangEqual => "BANG_EQUAL != null".to_string(),
-            //         Token::Less => "LESS < null".to_string(),
-            //         Token::LessEqual => "LESS_EQUAL <= null".to_string(),
-            //         Token::Greater => "GREATER > null".to_string(),
-            //         Token::GreaterEqual => "GREATER_EQUAL >= null".to_string(),
-            //         Token::LeftParentheses => "LEFT_PAREN ( null".to_string(),
-            //         Token::RightParentheses => "RIGHT_PAREN ) null".to_string(),
-            //         Token::LeftBrace => "LEFT_BRACE { null".to_string(),
-            //         Token::RightBrace => "RIGHT_BRACE } null".to_string(),
-            //         Token::Star => "STAR * null".to_string(),
-            //         Token::Comma => "COMMA , null".to_string(),
-            //         Token::Plus => "PLUS + null".to_string(),
-            //         Token::Minus => "MINUS - null".to_string(),
-            //         Token::SemiColumn => "SEMICOLON ; null".to_string(),
-            //         Token::Dot => "DOT . null".to_string(),
-            //         Token::String(s) => {
-            //             format!("STRING \"{}\" {}", s, s)
-            //         },
-            //         Token::ReservedWord(s) => format!("{} {} null", s.to_uppercase(), s),
-            //         Token::Slash => "SLASH / null".to_string(),
-            //     };
-            //
-            //
-            //     println!("{}", token_string);
-            // }
-            // println!("EOF  null");
-            // if lexer.exit_code > 0 {
-            //     process::exit(lexer.exit_code);
-            // }
+
+            for token in tokens {
+                let token_string = match token {
+                    Token::Identifier(s) => format!("IDENTIFIER {} null", s),
+                    Token::Number(s, n) => {
+                        let original = format!("{}", n);
+                        let formatted = if n.fract() == 0.0 {
+                            format!("{:.1}", n)
+                        } else {
+                            let parts: Vec<&str> = original.split('.').collect();
+                            if parts.len() > 1 && parts[1].chars().all(|c| c == '0') {
+                                format!("{:.1}", n)
+                            } else {
+                                original.clone()
+                            }
+                        };
+                        format!("NUMBER {} {}", s, formatted)
+                    },
+                    Token::Equal => "EQUAL = null".to_string(),
+                    Token::EqualEqual => "EQUAL_EQUAL == null".to_string(),
+                    Token::Bang => "BANG ! null".to_string(),
+                    Token::BangEqual => "BANG_EQUAL != null".to_string(),
+                    Token::Less => "LESS < null".to_string(),
+                    Token::LessEqual => "LESS_EQUAL <= null".to_string(),
+                    Token::Greater => "GREATER > null".to_string(),
+                    Token::GreaterEqual => "GREATER_EQUAL >= null".to_string(),
+                    Token::LeftParentheses => "LEFT_PAREN ( null".to_string(),
+                    Token::RightParentheses => "RIGHT_PAREN ) null".to_string(),
+                    Token::LeftBrace => "LEFT_BRACE { null".to_string(),
+                    Token::RightBrace => "RIGHT_BRACE } null".to_string(),
+                    Token::Star => "STAR * null".to_string(),
+                    Token::Comma => "COMMA , null".to_string(),
+                    Token::Plus => "PLUS + null".to_string(),
+                    Token::Minus => "MINUS - null".to_string(),
+                    Token::SemiColumn => "SEMICOLON ; null".to_string(),
+                    Token::Dot => "DOT . null".to_string(),
+                    Token::String(s) => {
+                        format!("STRING \"{}\" {}", s, s)
+                    },
+                    Token::ReservedWord(s) => format!("{} {} null", s.to_uppercase(), s),
+                    Token::Slash => "SLASH / null".to_string(),
+                };
+
+
+                println!("{}", token_string);
+            }
+            println!("EOF  null");
+            if lexer.exit_code > 0 {
+                process::exit(lexer.exit_code);
+            }
         }
         "parse" => {
-            // let mut file = File::open(filename);
-            //
-            // let mut contents = String::new();
-            // file.unwrap().read_to_string(&mut contents);
-            //
-            // let mut lexer = Lexer::new(&contents);
-            //
-            // while let Some(token) = lexer.next_token() {
-            //     let token_string = match token {
-            //         Token::ReservedWord(s) => s,
-            //         Token::Number(_, n) => {
-            //             let original = format!("{}", n);
-            //             let formatted = if n.fract() == 0.0 {
-            //                 format!("{:.1}", n)
-            //             } else {
-            //                 let parts: Vec<&str> = original.split('.').collect();
-            //                 if parts.len() > 1 && parts[1].chars().all(|c| c == '0') {
-            //                     format!("{:.1}", n)
-            //                 } else {
-            //                     original.clone()
-            //                 }
-            //             };
-            //             format!("{}", formatted)
-            //         },
-            //         Token::String(s) => s,
-            //         Token::LeftParentheses => "(group ".to_string(),
-            //         Token::RightParentheses => ")".to_string(),
-            //         _ => "Not Implemented".to_string(),
-            //     };
-            //
-            //     print!("{}", token_string);
-            // }
-            let mut file = File::open(filename);
-            let mut contents = String::new();
-            file.unwrap().read_to_string(&mut contents);
-            let mut file = File::open(filename);
-            let mut parser = Parser::new(contents.as_str());
-            let res = parser.parse();
+
         }
         _ => {
             writeln!(io::stderr(), "Unknown command: {}", command).unwrap();
