@@ -4,14 +4,74 @@ use std::str::Chars;
 use std::fs::File;
 use std::io::{self, Read};
 
-struct Lexer<'a> {
-    input: Chars<'a>,
-    current: Option<char>,
-    line: usize,
-    exit_code: i32,
+// ============ AST Structures ============
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
+pub struct Node {
+    pub start: usize,
+    pub end: usize,
+}
+
+impl Node {
+    pub fn new(start: usize, end: usize) -> Self {
+        Self { start, end }
+    }
 }
 
 #[derive(Debug)]
+pub struct Program {
+    pub node: Node,
+    pub body: Vec<Statement>,
+}
+
+#[derive(Debug)]
+pub enum Statement {
+    VariableDeclarationStatement(VariableDeclaration),
+}
+
+#[derive(Debug)]
+pub struct VariableDeclaration {
+    pub node: Node,
+    pub declarations: Vec<VariableDeclarator>,
+}
+
+#[derive(Debug)]
+pub struct VariableDeclarator {
+    pub node: Node,
+    pub id: BindingIdentifier,
+    pub init: Option<Expression>,
+}
+
+#[derive(Debug)]
+pub struct BindingIdentifier {
+    pub node: Node,
+    pub name: String,
+}
+
+#[derive(Debug)]
+pub enum Expression {
+    NumberLiteral {
+        node: Node,
+        value: f64,
+    },
+    StringLiteral {
+        node: Node,
+        value: String,
+    },
+    Identifier {
+        node: Node,
+        name: String,
+    },
+}
+
+// ============ Error Types ============
+#[derive(Debug)]
+pub enum ErrorType {
+    ParseError,
+    IoError,
+}
+
+// ============ Token Definition ============
+#[derive(Debug, Clone)]
 enum Token {
     Number(String, f64),
     Identifier(String),
@@ -38,17 +98,13 @@ enum Token {
     ReservedWord(String),
 }
 
-fn is_reserved_word(word: &str) -> bool {
-    matches!(word,
-        "and" | "class" | "else" | "false" | "for" | "fun" | "if" | "nil" | "or" | "print" |
-        "return" | "super" | "this" | "true" | "var" | "while"
-    )
+// ============ Lexer Implementation ============
+struct Lexer<'a> {
+    input: Chars<'a>,
+    current: Option<char>,
+    line: usize,
+    exit_code: i32,
 }
-
-fn is_blacklisted(c: char) -> bool {
-    matches!(c, '$' | '#' | '@' | '^' | '%')
-}
-
 
 impl<'a> Lexer<'a> {
     fn new(input: &'a str) -> Self {
@@ -69,124 +125,15 @@ impl<'a> Lexer<'a> {
         }
     }
 
-    fn next_token(&mut self) -> Option<Token> {
-        self.skip_whitespace();
+    fn is_reserved_word(word: &str) -> bool {
+        matches!(word,
+            "and" | "class" | "else" | "false" | "for" | "fun" | "if" | "nil" | "or" |
+            "print" | "return" | "super" | "this" | "true" | "var" | "while"
+        )
+    }
 
-        match self.current {
-
-            Some(c) if is_blacklisted(c) => {
-                writeln!(io::stderr(), "[line {}] Error: Unexpected character: {}", self.line, c).unwrap();
-                self.exit_code = 65;
-                self.read_char();
-                self.next_token()
-            },
-            Some(c) if c.is_digit(10) => Some(self.read_number()),
-            Some(c) if c.is_alphabetic() || c == '_' => Some(self.read_identifier()),
-            Some(c) if c == '"' => match self.read_string() {
-                Ok(token) => Some(token),
-                Err(err) => {
-                    self.exit_code = 65;
-                    writeln!(io::stderr(), "[line {}] Error: Unterminated string.", self.line).unwrap();
-                    None
-                }
-            },
-            Some(c) if c == '=' =>  {
-                self.read_char();
-                if self.current == Some('=') {
-                    self.read_char();
-                    Some(Token::EqualEqual)
-                } else {
-                    Some(Token::Equal)
-                }
-            },
-            Some(c) if c == '<' =>  {
-                self.read_char();
-                if self.current == Some('=') {
-                    self.read_char();
-                    Some(Token::LessEqual)
-                } else {
-                    Some(Token::Less)
-                }
-            },
-            Some(c) if c == '!' =>  {
-                self.read_char();
-                if self.current == Some('=') {
-                    self.read_char();
-                    Some(Token::BangEqual)
-                } else {
-                    Some(Token::Bang)
-                }
-            },
-            Some(c) if c == '>' =>  {
-                self.read_char();
-                if self.current == Some('=') {
-                    self.read_char();
-                    Some(Token::GreaterEqual)
-                } else {
-                    Some(Token::Greater)
-                }
-            },
-            Some(c) if c == '/' =>  {
-                self.read_char();
-                if self.current == Some('/') {
-                    while let Some(c) = self.current {
-                        if c == '\n' {
-                            self.read_char();
-                            break;
-                        }
-                        self.read_char();
-                    }
-                    self.next_token()
-                } else {
-                    Some(Token::Slash)
-                }
-            },
-            Some(c) if c == '.' =>  {
-                self.read_char();
-                Some(Token::Dot)
-            },
-            Some(c) if c == '(' =>  {
-                self.read_char();
-                Some(Token::LeftParentheses)
-            },
-            Some(c) if c == ')' =>  {
-                self.read_char();
-                Some(Token::RightParentheses)
-            },
-            Some(c) if c == '{' =>  {
-                self.read_char();
-                Some(Token::LeftBrace)
-            },
-            Some(c) if c == '}' =>  {
-                self.read_char();
-                Some(Token::RightBrace)
-            },
-            Some(c) if c == '*' =>  {
-                self.read_char();
-                Some(Token::Star)
-            },
-            Some(c) if c == ',' =>  {
-                self.read_char();
-                Some(Token::Comma)
-            },
-            Some(c) if c == '+' =>  {
-                self.read_char();
-                Some(Token::Plus)
-            },
-            Some(c) if c == '-' =>  {
-                self.read_char();
-                Some(Token::Minus)
-            },
-            Some(c) if c == ';' =>  {
-                self.read_char();
-                Some(Token::SemiColumn)
-            },
-            None => None,
-            _ => {
-                self.read_char();
-                None
-            }
-        }
+    fn is_blacklisted(c: char) -> bool {
+        matches!(c, '$' | '#' | '@' | '^' | '%')
     }
 
     fn skip_whitespace(&mut self) {
@@ -208,12 +155,8 @@ impl<'a> Lexer<'a> {
             self.read_char();
         }
         match number.parse() {
-            Ok(n) => {
-                Token::Number(number, n)
-            },
-            Err(e) => {
-                panic!("Failed to parse number: {}", e)
-            }
+            Ok(n) => Token::Number(number, n),
+            Err(e) => panic!("Failed to parse number: {}", e)
         }
     }
 
@@ -227,7 +170,7 @@ impl<'a> Lexer<'a> {
             self.read_char();
         }
 
-        if is_reserved_word(&identifier) {
+        if Self::is_reserved_word(&identifier) {
             Token::ReservedWord(identifier)
         } else {
             Token::Identifier(identifier)
@@ -248,143 +191,309 @@ impl<'a> Lexer<'a> {
         Err(format!("Unterminated string: \"{}\"", string))
     }
 
-    fn lex(&mut self) {
-        while let Some(token) = self.next_token() {
-            let token_string = match token {
-                Token::Identifier(s) => format!("IDENTIFIER {} null", s),
-                Token::Number(s, n) => {
-                    let original = format!("{}", n);
-                    let formatted = if n.fract() == 0.0 {
-                        format!("{:.1}", n)
-                    } else {
-                        let parts: Vec<&str> = original.split('.').collect();
-                        if parts.len() > 1 && parts[1].chars().all(|c| c == '0') {
-                            format!("{:.1}", n)
-                        } else {
-                            original.clone()
+    fn next_token(&mut self) -> Option<Token> {
+        self.skip_whitespace();
+
+        match self.current {
+            Some(c) if Self::is_blacklisted(c) => {
+                writeln!(io::stderr(), "[line {}] Error: Unexpected character: {}", self.line, c).unwrap();
+                self.exit_code = 65;
+                self.read_char();
+                self.next_token()
+            },
+            Some(c) if c.is_digit(10) => Some(self.read_number()),
+            Some(c) if c.is_alphabetic() || c == '_' => Some(self.read_identifier()),
+            Some(c) if c == '"' => match self.read_string() {
+                Ok(token) => Some(token),
+                Err(_) => {
+                    self.exit_code = 65;
+                    writeln!(io::stderr(), "[line {}] Error: Unterminated string.", self.line).unwrap();
+                    None
+                }
+            },
+            Some(c) if c == '=' => {
+                self.read_char();
+                if self.current == Some('=') {
+                    self.read_char();
+                    Some(Token::EqualEqual)
+                } else {
+                    Some(Token::Equal)
+                }
+            },
+            Some(c) if c == '<' => {
+                self.read_char();
+                if self.current == Some('=') {
+                    self.read_char();
+                    Some(Token::LessEqual)
+                } else {
+                    Some(Token::Less)
+                }
+            },
+            Some(c) if c == '!' => {
+                self.read_char();
+                if self.current == Some('=') {
+                    self.read_char();
+                    Some(Token::BangEqual)
+                } else {
+                    Some(Token::Bang)
+                }
+            },
+            Some(c) if c == '>' => {
+                self.read_char();
+                if self.current == Some('=') {
+                    self.read_char();
+                    Some(Token::GreaterEqual)
+                } else {
+                    Some(Token::Greater)
+                }
+            },
+            Some(c) if c == '/' => {
+                self.read_char();
+                if self.current == Some('/') {
+                    while let Some(c) = self.current {
+                        if c == '\n' {
+                            self.read_char();
+                            break;
                         }
-                    };
-                    format!("NUMBER {} {}", s, formatted)
-                },
-                Token::Equal => "EQUAL = null".to_string(),
-                Token::EqualEqual => "EQUAL_EQUAL == null".to_string(),
-                Token::Bang => "BANG ! null".to_string(),
-                Token::BangEqual => "BANG_EQUAL != null".to_string(),
-                Token::Less => "LESS < null".to_string(),
-                Token::LessEqual => "LESS_EQUAL <= null".to_string(),
-                Token::Greater => "GREATER > null".to_string(),
-                Token::GreaterEqual => "GREATER_EQUAL >= null".to_string(),
-                Token::LeftParentheses => "LEFT_PAREN ( null".to_string(),
-                Token::RightParentheses => "RIGHT_PAREN ) null".to_string(),
-                Token::LeftBrace => "LEFT_BRACE { null".to_string(),
-                Token::RightBrace => "RIGHT_BRACE } null".to_string(),
-                Token::Star => "STAR * null".to_string(),
-                Token::Comma => "COMMA , null".to_string(),
-                Token::Plus => "PLUS + null".to_string(),
-                Token::Minus => "MINUS - null".to_string(),
-                Token::SemiColumn => "SEMICOLON ; null".to_string(),
-                Token::Dot => "DOT . null".to_string(),
-                Token::String(s) => {
-                    format!("STRING \"{}\" {}", s, s)
-                },
-                Token::ReservedWord(s) => format!("{} {} null", s.to_uppercase(), s),
-                Token::Slash => "SLASH / null".to_string(),
-            };
-
-
-            println!("{}", token_string);
+                        self.read_char();
+                    }
+                    self.next_token()
+                } else {
+                    Some(Token::Slash)
+                }
+            },
+            Some('(') => { self.read_char(); Some(Token::LeftParentheses) },
+            Some(')') => { self.read_char(); Some(Token::RightParentheses) },
+            Some('{') => { self.read_char(); Some(Token::LeftBrace) },
+            Some('}') => { self.read_char(); Some(Token::RightBrace) },
+            Some('*') => { self.read_char(); Some(Token::Star) },
+            Some(',') => { self.read_char(); Some(Token::Comma) },
+            Some('+') => { self.read_char(); Some(Token::Plus) },
+            Some('-') => { self.read_char(); Some(Token::Minus) },
+            Some(';') => { self.read_char(); Some(Token::SemiColumn) },
+            Some('.') => { self.read_char(); Some(Token::Dot) },
+            None => None,
+            _ => {
+                self.read_char();
+                None
+            }
         }
-        println!("EOF  null");
-        if self.exit_code > 0 {
-            process::exit(self.exit_code);
-        }
-    }
-
-    fn collect_tokens(&mut self) -> Vec<Token> {
-        let mut tokens = Vec::new();
-        while let Some(token) = self.next_token() {
-            tokens.push(token);
-        }
-        tokens
     }
 }
 
+// ============ Parser Implementation ============
+struct Parser<'a> {
+    source: &'a str,
+    lexer: Lexer<'a>,
+    current: Option<Token>,
+    prev_token_end: usize,
+}
+
+impl<'a> Parser<'a> {
+    fn new(source: &'a str) -> Self {
+        Self {
+            source,
+            lexer: Lexer::new(source),
+            current: None,
+            prev_token_end: 0,
+        }
+    }
+
+    fn advance(&mut self) -> Result<(), ErrorType> {
+        self.current = self.lexer.next_token();
+        Ok(())
+    }
+
+    fn parse(&mut self) -> Result<Program, ErrorType> {
+        self.advance()?; // Get first token
+        let statements = self.parse_statements()?;
+
+        Ok(Program {
+            node: Node {
+                start: 0,
+                end: self.source.len(),
+            },
+            body: statements,
+        })
+    }
+
+    fn parse_statements(&mut self) -> Result<Vec<Statement>, ErrorType> {
+        let mut statements = Vec::new();
+
+        while let Some(token) = &self.current {
+            match token {
+                Token::ReservedWord(word) if word == "true" => {
+                    writeln!(io::stdout(), "true").unwrap();
+                    self.advance()?;
+                },
+                Token::ReservedWord(word) if word == "false" => {
+                    writeln!(io::stdout(), "false").unwrap();
+                    self.advance()?;
+                },
+                Token::ReservedWord(word) if word == "nil" => {
+                    writeln!(io::stdout(), "nil").unwrap();
+                    self.advance()?;
+                },
+                Token::Number(nStr, _) => {
+                    writeln!(io::stdout(), "{}", nStr).unwrap();
+                    self.advance()?;
+                },
+                Token::String(str) => {
+                    writeln!(io::stdout(), "{}", str).unwrap();
+                    self.advance()?;
+                },
+                Token::LeftParentheses => {
+
+                }
+                _ => {
+                    self.advance()?;
+                }
+            }
+        }
+
+        Ok(statements)
+    }
+
+    fn parse_paranthesis(&mut self) -> None {
+        let start = self.prev_token_end;
+        write!(io::stdout(), "(group ").unwrap();
+
+        self.advance()?; // consume 'var'
+
+    }
+
+    fn parse_variable_declaration(&mut self) -> Result<Statement, ErrorType> {
+        let start = self.prev_token_end;
+        self.advance()?; // consume 'var'
+
+        let declarations = self.parse_variable_declarators()?;
+
+        Ok(Statement::VariableDeclarationStatement(VariableDeclaration {
+            node: Node::new(start, self.prev_token_end),
+            declarations,
+        }))
+    }
+
+    fn parse_variable_declarators(&mut self) -> Result<Vec<VariableDeclarator>, ErrorType> {
+        let mut declarators = Vec::new();
+
+        loop {
+            match &self.current {
+                Some(Token::Identifier(name)) => {
+                    let start = self.prev_token_end;
+                    let name = name.clone();
+                    self.advance()?;
+
+                    let init = if let Some(Token::Equal) = &self.current {
+                        self.advance()?; // consume '='
+                        Some(self.parse_expression()?)
+                    } else {
+                        None
+                    };
+
+                    declarators.push(VariableDeclarator {
+                        node: Node::new(start, self.prev_token_end),
+                        id: BindingIdentifier {
+                            node: Node::new(start, self.prev_token_end),
+                            name,
+                        },
+                        init,
+                    });
+
+                    match &self.current {
+                        Some(Token::Comma) => {
+                            self.advance()?;
+                            continue;
+                        }
+                        Some(Token::SemiColumn) => {
+                            self.advance()?;
+                            break;
+                        }
+                        _ => break,
+                    }
+                }
+                _ => break,
+            }
+        }
+
+        Ok(declarators)
+    }
+
+    fn parse_expression(&mut self) -> Result<Expression, ErrorType> {
+        match &self.current {
+            Some(Token::Number(_, value)) => {
+                let start = self.prev_token_end;
+                let value = *value;
+                self.advance()?;
+                Ok(Expression::NumberLiteral {
+                    node: Node::new(start, self.prev_token_end),
+                    value,
+                })
+            }
+            Some(Token::String(value)) => {
+                let start = self.prev_token_end;
+                let value = value.clone();
+                self.advance()?;
+                Ok(Expression::StringLiteral {
+                    node: Node::new(start, self.prev_token_end),
+                    value,
+                })
+            }
+            Some(Token::Identifier(name)) => {
+                let start = self.prev_token_end;
+                let name = name.clone();
+                self.advance()?;
+                Ok(Expression::Identifier {
+                    node: Node::new(start, self.prev_token_end),
+                    name,
+                })
+            }
+            _ => Err(ErrorType::ParseError),
+        }
+    }
+}
+
+// ============ Main Function ============
 fn main() {
     let args: Vec<String> = env::args().collect();
     if args.len() < 3 {
-        writeln!(io::stderr(), "Usage: {} tokenize <filename>", args[0]).unwrap();
+        writeln!(io::stderr(), "Usage: {} <command> <filename>", args[0]).unwrap();
         return;
     }
 
     let command = &args[1];
     let filename = &args[2];
+
+    // Read the file
+    let mut file = File::open(filename).unwrap();
+    let mut contents = String::new();
+    file.read_to_string(&mut contents).unwrap();
+
     match command.as_str() {
         "tokenize" => {
-            let mut file = File::open(filename);
-
-            let mut contents = String::new();
-            file.unwrap().read_to_string(&mut contents);
-
             let mut lexer = Lexer::new(&contents);
-            let tokens = lexer.collect_tokens();
-
-
-            for token in tokens {
-                let token_string = match token {
-                    Token::Identifier(s) => format!("IDENTIFIER {} null", s),
-                    Token::Number(s, n) => {
-                        let original = format!("{}", n);
-                        let formatted = if n.fract() == 0.0 {
-                            format!("{:.1}", n)
-                        } else {
-                            let parts: Vec<&str> = original.split('.').collect();
-                            if parts.len() > 1 && parts[1].chars().all(|c| c == '0') {
-                                format!("{:.1}", n)
-                            } else {
-                                original.clone()
-                            }
-                        };
-                        format!("NUMBER {} {}", s, formatted)
-                    },
-                    Token::Equal => "EQUAL = null".to_string(),
-                    Token::EqualEqual => "EQUAL_EQUAL == null".to_string(),
-                    Token::Bang => "BANG ! null".to_string(),
-                    Token::BangEqual => "BANG_EQUAL != null".to_string(),
-                    Token::Less => "LESS < null".to_string(),
-                    Token::LessEqual => "LESS_EQUAL <= null".to_string(),
-                    Token::Greater => "GREATER > null".to_string(),
-                    Token::GreaterEqual => "GREATER_EQUAL >= null".to_string(),
-                    Token::LeftParentheses => "LEFT_PAREN ( null".to_string(),
-                    Token::RightParentheses => "RIGHT_PAREN ) null".to_string(),
-                    Token::LeftBrace => "LEFT_BRACE { null".to_string(),
-                    Token::RightBrace => "RIGHT_BRACE } null".to_string(),
-                    Token::Star => "STAR * null".to_string(),
-                    Token::Comma => "COMMA , null".to_string(),
-                    Token::Plus => "PLUS + null".to_string(),
-                    Token::Minus => "MINUS - null".to_string(),
-                    Token::SemiColumn => "SEMICOLON ; null".to_string(),
-                    Token::Dot => "DOT . null".to_string(),
-                    Token::String(s) => {
-                        format!("STRING \"{}\" {}", s, s)
-                    },
-                    Token::ReservedWord(s) => format!("{} {} null", s.to_uppercase(), s),
-                    Token::Slash => "SLASH / null".to_string(),
-                };
-
-
-                println!("{}", token_string);
+            while let Some(token) = lexer.next_token() {
+                println!("{:?}", token);
             }
-            println!("EOF  null");
             if lexer.exit_code > 0 {
                 process::exit(lexer.exit_code);
             }
         }
         "parse" => {
-
+            let mut parser = Parser::new(&contents);
+            match parser.parse() {
+                Ok(program) => {
+                    println!("Successfully parsed program: {:#?}", program);
+                }
+                Err(_) => {
+                    eprintln!("Error parsing program");
+                    process::exit(65);
+                }
+            }
         }
         _ => {
             writeln!(io::stderr(), "Unknown command: {}", command).unwrap();
-            return;
+            process::exit(1);
         }
     }
 }
