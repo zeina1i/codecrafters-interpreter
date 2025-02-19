@@ -98,6 +98,7 @@ enum Token {
     ReservedWord(String),
 }
 
+
 // ============ Lexer Implementation ============
 struct Lexer<'a> {
     input: Chars<'a>,
