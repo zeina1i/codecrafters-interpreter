@@ -319,7 +319,7 @@ impl<'a> Parser<'a> {
     }
 
     fn parse_statements(&mut self) -> Result<Vec<Statement>, ErrorType> {
-        let mut statements = Vec::new();
+        let  statements = Vec::new();
 
         while let Some(token) = &self.current {
             match token {
@@ -344,6 +344,11 @@ impl<'a> Parser<'a> {
                     self.advance()?;
                 },
                 Token::LeftParentheses => {
+                    self.advance()?; // Consume the opening parenthesis
+                    match self.parse_paranthesis() {
+                        Ok(()) => {}, // Parenthesis was parsed successfully
+                        Err(err) => return Err(err), // Propagate any parsing errors
+                    }
 
                 }
                 _ => {
@@ -355,13 +360,50 @@ impl<'a> Parser<'a> {
         Ok(statements)
     }
 
-    fn parse_paranthesis(&mut self) -> None {
-        let start = self.prev_token_end;
+    fn parse_paranthesis(&mut self) -> Result<(), ErrorType> {
+        self.advance()?; // consume '('
+        self.advance()?; // consume '('
         write!(io::stdout(), "(group ").unwrap();
+        // write!(io::stdout(), "{}", self.current).unwrap();
 
-        self.advance()?; // consume 'var'
+        // Parse the expression inside the parentheses
+        match &self.current {
+            Some(Token::Number(nStr, _)) => {
+                writeln!(io::stdout(), "{}", nStr).unwrap();
+                self.advance()?;
+            },
+            Some(Token::String(str)) => {
+                writeln!(io::stdout(), "{}", str).unwrap();
+                self.advance()?;
+            },
+            Some(Token::Identifier(name)) => {
+                writeln!(io::stdout(), "{}", name).unwrap();
+                self.advance()?;
+            },
+            Some(Token::LeftParentheses) => {
+                self.parse_paranthesis()?;
+            },
+            _ => {
+                writeln!(io::stdout(), "{}", ).unwrap();
+                // Handle other token types or error
+                self.advance()?;
+            }
+        }
 
+        // Check for closing parenthesis
+        match &self.current {
+            Some(Token::RightParentheses) => {
+                write!(io::stdout(), ")").unwrap();
+                self.advance()?; // consume ')'
+                Ok(())
+            },
+            _ => {
+                writeln!(io::stderr(), "Expected closing parenthesis").unwrap();
+                Err(ErrorType::ParseError)
+            }
+        }
     }
+
 
     fn parse_variable_declaration(&mut self) -> Result<Statement, ErrorType> {
         let start = self.prev_token_end;
