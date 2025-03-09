@@ -4,64 +4,6 @@ use std::str::Chars;
 use std::fs::File;
 use std::io::{self, Read};
 
-// ============ AST Structures ============
-#[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
-pub struct Node {
-    pub start: usize,
-    pub end: usize,
-}
-
-impl Node {
-    pub fn new(start: usize, end: usize) -> Self {
-        Self { start, end }
-    }
-}
-
-#[derive(Debug)]
-pub struct Program {
-    pub node: Node,
-    pub body: Vec<Statement>,
-}
-
-#[derive(Debug)]
-pub enum Statement {
-    VariableDeclarationStatement(VariableDeclaration),
-}
-
-#[derive(Debug)]
-pub struct VariableDeclaration {
-    pub node: Node,
-    pub declarations: Vec<VariableDeclarator>,
-}
-
-#[derive(Debug)]
-pub struct VariableDeclarator {
-    pub node: Node,
-    pub id: BindingIdentifier,
-    pub init: Option<Expression>,
-}
-
-#[derive(Debug)]
-pub struct BindingIdentifier {
-    pub node: Node,
-    pub name: String,
-}
-
-#[derive(Debug)]
-pub enum Expression {
-    NumberLiteral {
-        node: Node,
-        value: f64,
-    },
-    StringLiteral {
-        node: Node,
-        value: String,
-    },
-    Identifier {
-        node: Node,
-        name: String,
-    },
-}
 
 // ============ Error Types ============
 #[derive(Debug)]
@@ -305,22 +247,12 @@ impl<'a> Parser<'a> {
         Ok(())
     }
 
-    fn parse(&mut self) -> Result<Program, ErrorType> {
+    fn parse(&mut self) -> Result<(), ErrorType> {
         self.advance()?; // Get first token
-        let statements = self.parse_statements()?;
-
-        Ok(Program {
-            node: Node {
-                start: 0,
-                end: self.source.len(),
-            },
-            body: statements,
-        })
+        self.parse_statements()
     }
 
-    fn parse_statements(&mut self) -> Result<Vec<Statement>, ErrorType> {
-        let  statements = Vec::new();
-
+    fn parse_statements(&mut self) -> Result<(), ErrorType> {
         while let Some(token) = &self.current {
             match token {
                 Token::ReservedWord(word) if word == "true" => {
@@ -344,49 +276,48 @@ impl<'a> Parser<'a> {
                     self.advance()?;
                 },
                 Token::LeftParentheses => {
-                    self.advance()?; // Consume the opening parenthesis
                     match self.parse_paranthesis() {
                         Ok(()) => {}, // Parenthesis was parsed successfully
                         Err(err) => return Err(err), // Propagate any parsing errors
                     }
-
-                }
+                },
                 _ => {
                     self.advance()?;
                 }
             }
         }
 
-        Ok(statements)
+        Ok(())
     }
 
     fn parse_paranthesis(&mut self) -> Result<(), ErrorType> {
         self.advance()?; // consume '('
-        self.advance()?; // consume '('
         write!(io::stdout(), "(group ").unwrap();
-        // write!(io::stdout(), "{}", self.current).unwrap();
 
-        // Parse the expression inside the parentheses
+        // Print the current token
         match &self.current {
-            Some(Token::Number(nStr, _)) => {
-                writeln!(io::stdout(), "{}", nStr).unwrap();
+            Some(Token::Number(nStr, val)) => {
+                write!(io::stdout(), "NUMBER {} {}", nStr, val).unwrap();
                 self.advance()?;
             },
             Some(Token::String(str)) => {
-                writeln!(io::stdout(), "{}", str).unwrap();
+                write!(io::stdout(), "STRING \"{}\"", str).unwrap();
                 self.advance()?;
             },
             Some(Token::Identifier(name)) => {
-                writeln!(io::stdout(), "{}", name).unwrap();
+                write!(io::stdout(), "IDENTIFIER {}", name).unwrap();
                 self.advance()?;
             },
             Some(Token::LeftParentheses) => {
                 self.parse_paranthesis()?;
             },
-            _ => {
-                writeln!(io::stdout(), "{}", ).unwrap();
-                // Handle other token types or error
+            Some(other_token) => {
+                write!(io::stdout(), "OTHER {:?}", other_token).unwrap();
                 self.advance()?;
+            },
+            None => {
+                write!(io::stdout(), "NONE").unwrap();
+                return Err(ErrorType::ParseError);
             }
         }
 
@@ -401,97 +332,6 @@ impl<'a> Parser<'a> {
                 writeln!(io::stderr(), "Expected closing parenthesis").unwrap();
                 Err(ErrorType::ParseError)
             }
-        }
-    }
-
-
-    fn parse_variable_declaration(&mut self) -> Result<Statement, ErrorType> {
-        let start = self.prev_token_end;
-        self.advance()?; // consume 'var'
-
-        let declarations = self.parse_variable_declarators()?;
-
-        Ok(Statement::VariableDeclarationStatement(VariableDeclaration {
-            node: Node::new(start, self.prev_token_end),
-            declarations,
-        }))
-    }
-
-    fn parse_variable_declarators(&mut self) -> Result<Vec<VariableDeclarator>, ErrorType> {
-        let mut declarators = Vec::new();
-
-        loop {
-            match &self.current {
-                Some(Token::Identifier(name)) => {
-                    let start = self.prev_token_end;
-                    let name = name.clone();
-                    self.advance()?;
-
-                    let init = if let Some(Token::Equal) = &self.current {
-                        self.advance()?; // consume '='
-                        Some(self.parse_expression()?)
-                    } else {
-                        None
-                    };
-
-                    declarators.push(VariableDeclarator {
-                        node: Node::new(start, self.prev_token_end),
-                        id: BindingIdentifier {
-                            node: Node::new(start, self.prev_token_end),
-                            name,
-                        },
-                        init,
-                    });
-
-                    match &self.current {
-                        Some(Token::Comma) => {
-                            self.advance()?;
-                            continue;
-                        }
-                        Some(Token::SemiColumn) => {
-                            self.advance()?;
-                            break;
-                        }
-                        _ => break,
-                    }
-                }
-                _ => break,
-            }
-        }
-
-        Ok(declarators)
-    }
-
-    fn parse_expression(&mut self) -> Result<Expression, ErrorType> {
-        match &self.current {
-            Some(Token::Number(_, value)) => {
-                let start = self.prev_token_end;
-                let value = *value;
-                self.advance()?;
-                Ok(Expression::NumberLiteral {
-                    node: Node::new(start, self.prev_token_end),
-                    value,
-                })
-            }
-            Some(Token::String(value)) => {
-                let start = self.prev_token_end;
-                let value = value.clone();
-                self.advance()?;
-                Ok(Expression::StringLiteral {
-                    node: Node::new(start, self.prev_token_end),
-                    value,
-                })
-            }
-            Some(Token::Identifier(name)) => {
-                let start = self.prev_token_end;
-                let name = name.clone();
-                self.advance()?;
-                Ok(Expression::Identifier {
-                    node: Node::new(start, self.prev_token_end),
-                    name,
-                })
-            }
-            _ => Err(ErrorType::ParseError),
         }
     }
 }
@@ -525,8 +365,8 @@ fn main() {
         "parse" => {
             let mut parser = Parser::new(&contents);
             match parser.parse() {
-                Ok(program) => {
-                    println!("Successfully parsed program: {:#?}", program);
+                Ok(_) => {
+                    // println!("Successfully parsed program");
                 }
                 Err(_) => {
                     eprintln!("Error parsing program");
