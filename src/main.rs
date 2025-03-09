@@ -281,6 +281,12 @@ impl<'a> Parser<'a> {
                         Err(err) => return Err(err), // Propagate any parsing errors
                     }
                 },
+                Token::Bang => {
+                    match self.parse_negation() {
+                        Ok(()) => {}, // Parenthesis was parsed successfully
+                        Err(err) => return Err(err), // Propagate any parsing errors
+                    }
+                },
                 _ => {
                     self.advance()?;
                 }
@@ -331,6 +337,20 @@ impl<'a> Parser<'a> {
             _ => {
                 writeln!(io::stderr(), "Expected closing parenthesis").unwrap();
                 Err(ErrorType::ParseError)
+            }
+        }
+    }
+    fn parse_negation(&mut self) -> Result<(), ErrorType> {
+        self.advance()?; // consume '!'
+        write!(io::stdout(), "(! ").unwrap();
+        match &self.current {
+            Some(Token::ReservedWord(word)) if word == "true" || word == "false" => {
+                write!(io::stdout(), "{}", word).unwrap();
+                write!(io::stdout(), "{}", ")").unwrap();
+                self.advance()
+            },
+            _ => {
+                self.advance()
             }
         }
     }
